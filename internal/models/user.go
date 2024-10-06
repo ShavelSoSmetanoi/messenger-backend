@@ -9,3 +9,9 @@ type User struct {
 	UniqueId string `json:"unique_id"`
 	About    string `json:"about"`
 }
+
+type UserUpdate struct {
+	Email string `json:"email"`
+	About string `json:"about"`
+	Photo []byte `json:"photo"`
+}
