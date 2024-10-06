@@ -1,30 +1,28 @@
-# Используем официальный образ Go для сборки
+# Сборка приложения
 FROM golang:1.22 AS builder
 
-# Устанавливаем рабочую директорию
-WORKDIR /msg-bakend/cmd/app/
+WORKDIR /msg-bakend
 
-# Копируем файлы go.mod и go.sum для установки зависимостей
+# Копируем go.mod и go.sum
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Копируем весь проект в контейнер
-COPY ./cmd/app .
+# Копируем весь проект
+COPY . .
 
 # Собираем Go-приложение
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o msg-bakend .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
-# Используем минимальный образ для запуска приложения
+# Финальный этап
 FROM alpine:latest
 
-# Устанавливаем рабочую директорию
-WORKDIR /root/
+WORKDIR /root
 
-# Копируем скомпилированное приложение из образа builder
-COPY --from=builder /msg-bakend/msg-bakend .
+# Копируем исполняемый файл из сборочного контейнера
+COPY --from=builder /msg-bakend/main .
 
-# Открываем порт для приложения
+# Открываем порт для приложения (если нужно)
 EXPOSE 8080
 
-# Команда для запуска приложения
-CMD ["./msg-bakend"]
+# Запускаем приложение
+CMD ["./main"]
