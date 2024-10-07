@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
-	"github.com/google/uuid"
+	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 )
@@ -35,7 +35,7 @@ func (r *PostgresUserRepository) CreateUser(ctx context.Context, username, email
 		return err
 	}
 
-	uniqueID := generateUniqueID()
+	uniqueID := pkg.GenerateUniqueID()
 
 	_, err = r.db.ExecContext(ctx, "INSERT INTO users (username, email, password, photo, unique_id, about, registration_date) VALUES ($1, $2, $3, $4, $5, $6, NOW())",
 		username, email, hashedPassword, photo, uniqueID, about)
@@ -102,8 +102,4 @@ func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username
 	}
 
 	return user, nil
-}
-
-func generateUniqueID() string {
-	return uuid.New().String()
 }

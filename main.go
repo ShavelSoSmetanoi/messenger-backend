@@ -1,18 +1,19 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/app"
+	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 )
 
 func main() {
-	r := gin.Default() // Создаём новый роутер
+	//r := rest.SetupRouter()
+	//
+	//// Запускаем сервер на порту 8080
+	//r.Run(":8080")
 
-	// Определяем маршрут
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	})
+	// Создание нового приложения
+	myApp := app.NewApp()
 
-	// Запускаем сервер на порту 8080
-	r.Run(":8080")
+	// Запуск приложения на порту 8080 (или другом, который вы хотите использовать)
+	myApp.Run("8080")
 }
