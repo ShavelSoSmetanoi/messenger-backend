@@ -1,4 +1,4 @@
-package db
+package repository
 
 import (
 	"context"
@@ -59,7 +59,7 @@ import (
 //	return DB, nil // Возвращаем соединение и nil для ошибки
 //}
 
-var db *pgxpool.Pool
+var Db *pgxpool.Pool
 
 func InitDB() (*pgxpool.Pool, error) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
@@ -93,6 +93,6 @@ func InitDB() (*pgxpool.Pool, error) {
 
 	log.Println("Database connected successfully")
 
-	db = pool
-	return db, nil
+	Db = pool
+	return Db, nil
 }

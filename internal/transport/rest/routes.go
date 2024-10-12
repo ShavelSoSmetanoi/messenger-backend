@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/db"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
 	"github.com/gin-gonic/gin"
@@ -12,7 +12,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	userRepository, err := db.InitDB()
+	userRepository, err := repository.InitDB()
 	if err != nil {
 		panic("Pizda")
 	}
