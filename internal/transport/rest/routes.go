@@ -1,30 +1,26 @@
 package rest
 
 import (
-	"database/sql"
-	"fmt"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/db"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
-	"log"
 	"net/http"
-	"os"
 )
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	var connStr string = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
-
-	db, err := sql.Open("postgres", connStr)
+	userRepository, err := db.InitDB()
 	if err != nil {
-		log.Printf("Error opening database: %v", err)
+		panic("Pizda")
 	}
-	defer db.Close()
 
-	rp := user.NewPostgresUserRepository(db)
+	// Создание репозитория пользователей
+	rp := user.NewPostgresUserRepository(userRepository)
+
+	// Создание сервиса пользователей
 	us := services.NewUserService(rp)
 
 	// Маршруты для аутентификации и авторизации
@@ -36,7 +32,7 @@ func SetupRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
-	r.GET("/profile", us.GetUserProfile)
+	//r.GET("/profile", us.GetUserProfile)
 	//authUsers := r.Group("/")
 	//authUsers.Use(auth.AuthMiddleware(os.Getenv("JWT_SECRET")))
 	//

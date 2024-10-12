@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/db"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 	"github.com/joho/godotenv"
@@ -10,9 +9,7 @@ import (
 )
 
 func main() {
-
-	db.InitDB(db.ConnStr)
-
+	//db.InitDB(db.ConnStr)
 	//Загрузка переменных окружения из файла .env
 	err := godotenv.Load()
 	if err != nil {

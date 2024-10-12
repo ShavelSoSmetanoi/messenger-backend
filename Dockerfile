@@ -18,6 +18,8 @@ FROM alpine:latest
 
 WORKDIR /root
 
+# Копируем .env файл
+COPY .env .env
 # Копируем исполняемый файл из сборочного контейнера
 COPY --from=builder /msg-bakend/main .
 
