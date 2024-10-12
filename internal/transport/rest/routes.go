@@ -28,8 +28,8 @@ func SetupRouter() *gin.Engine {
 	us := services.NewUserService(rp)
 
 	// Маршруты для аутентификации и авторизации
-	//r.POST("/login", auth.Login)
-	//r.POST("/register", auth.Register)
+	//r.POST("/login", us.)
+	r.POST("/register", us.RegisterUser)
 
 	// Проверка доступности сервиса
 	r.GET("/ping", func(c *gin.Context) {

@@ -8,12 +8,14 @@ import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
+	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"os"
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, username, email, password, about string, photo []byte) error
+	//CreateUser(username string, email string, password string, about string, photo []byte) error
 	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
 	GetUserByID(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error
@@ -28,22 +30,45 @@ func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
 	return &PostgresUserRepository{db: db}
 }
 
-func (r *PostgresUserRepository) CreateUser(ctx context.Context, username, email, password, about string, photo []byte) error {
+// Close закрывает соединение с базой данных
+func (r *PostgresUserRepository) Close() error {
+	return r.db.Close()
+}
+
+func CreateUser(username, email, password, about string, photo []byte) error {
+	//Хэширование пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
 		return err
 	}
 
+	// Строка подключения
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable&client_encoding=UTF8",
+		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
+	// Подключение к базе данных
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Printf("Error connecting to database: %v", err)
+		return err
+	}
+	defer db.Close()
+
+	fmt.Println("Successfully connected to PostgreSQL!")
+
+	//Генерация уникального ID
 	uniqueID := pkg.GenerateUniqueID()
 
-	_, err = r.db.ExecContext(ctx, "INSERT INTO users (username, email, password, photo, unique_id, about, registration_date) VALUES ($1, $2, $3, $4, $5, $6, NOW())",
+	// Выполнение запроса на вставку данных пользователя
+	_, err = db.Exec("INSERT INTO users (username, email, password, photo, unique_id, about, registration_date) VALUES ($1, $2, $3, $4, $5, $6, NOW())",
 		username, email, hashedPassword, photo, uniqueID, about)
 	if err != nil {
-		log.Printf("Error inserting user into database: %v", err)
+		log.Printf("Error inserting user into database: %v, Username: %s, Email: %s, About: %s", err, username, email, about)
 		return err
 	}
 
+	// Логирование успешного выполнения
 	log.Printf("User %s created successfully", username)
 	return nil
 }

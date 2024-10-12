@@ -18,22 +18,36 @@ type App struct {
 	userTransport *rest.UserTransport
 }
 
+var DB *sql.DB
+
+var ConnStr string = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+	os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
+func InitDB(connectionString string) {
+	var err error
+	DB, err = sql.Open("postgres", connectionString)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+
+	// Ensure the database connection is closed when the function returns
+	defer func() {
+		if err := DB.Close(); err != nil {
+			log.Fatalf("Failed to close database: %v", err)
+		}
+	}()
+
+	log.Println("Database connected successfully")
+}
+
 // NewApp - создает новое приложение
 func NewApp() *App {
 	// Инициализация роутера
 	router := gin.Default()
 
-	var connStr string = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Printf("Error opening database: %v", err)
-	}
-	defer db.Close()
-
+	InitDB(ConnStr)
 	// Инициализация репозиториев
-	userRepo := user.NewPostgresUserRepository(db)
+	userRepo := user.NewPostgresUserRepository(DB)
 
 	// Инициализация сервисов
 	userService := services.NewUserService(userRepo)
@@ -57,7 +71,6 @@ func NewApp() *App {
 // registerRoutes - регистрирует маршруты приложения
 func (a *App) registerRoutes() {
 	a.userTransport.RegisterRoutes(a.router)
-
 }
 
 // Run - запускает приложение

@@ -10,10 +10,19 @@ import (
 	"net/http"
 )
 
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	About    string `json:"about"`
+	Photo    []byte `json:"photo"`
+}
+
 type UserServiceInterface interface {
 	GetUserProfile(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
 	CheckUserByUsername(c *gin.Context)
+	RegisterUser(c *gin.Context)
 }
 
 type UserService struct {
@@ -24,6 +33,22 @@ func NewUserService(repo user.UserRepository) *UserService {
 	return &UserService{
 		userRepo: repo,
 	}
+}
+
+func (s *UserService) RegisterUser(c *gin.Context) {
+	var registerRequest RegisterRequest
+	if err := c.ShouldBindJSON(&registerRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := user.CreateUser(registerRequest.Username, registerRequest.Email, registerRequest.Password, registerRequest.About, registerRequest.Photo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
 // GetUserProfile возвращает профиль пользователя по его ID
