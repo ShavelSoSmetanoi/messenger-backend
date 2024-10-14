@@ -1,24 +1,57 @@
 package middleware
 
 import (
-	"crypto/rand"
+	"context"
 	"fmt"
+	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8" // для Redis
-	"golang.org/x/net/context"
+	"github.com/go-redis/redis/v8"
 	"net/http"
 	"time"
 )
 
-var rdb = redis.NewClient(&redis.Options{ // Инициализация Redis
-	Addr: "localhost:6379", // Адрес Redis
-	DB:   0,                // Используемая база
-})
+var rdb *redis.Client
+
+// RegisterRequest структура для запроса регистрации
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	About    string `json:"about"`
+	Photo    []byte `json:"photo"`
+}
+
+// Инициализация Redis
+func InitRedis() {
+	rdb = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379", // Адрес Redis
+		DB:   0,                // Используемая база
+	})
+
+	// Проверяем соединение с Redis
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		panic(fmt.Errorf("could not connect to Redis: %v", err))
+	}
+}
 
 // EmailValidator отправляет код на почту и устанавливает таймаут
 func EmailValidator() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		email := c.PostForm("email") // Получаем email из формы
+		var req RegisterRequest
+
+		// Извлекаем JSON данные из запроса
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid request format.",
+			})
+			c.Abort()
+			return
+		}
+
+		email := req.Email // Получаем email из структуры
 
 		// Проверяем, существует ли email в Redis (ожидание повторного запроса)
 		ctx := context.Background()
@@ -32,7 +65,7 @@ func EmailValidator() gin.HandlerFunc {
 		}
 
 		// Генерация случайного кода
-		code := generateCode()
+		code := pkg.GenerateCode()
 
 		// Логика отправки кода на email (имитируем отправку)
 		err := sendCodeToEmail(email, code)
@@ -64,11 +97,40 @@ func EmailValidator() gin.HandlerFunc {
 	}
 }
 
-// Функция для генерации случайного 6-значного кода
-func generateCode() string {
-	b := make([]byte, 3)
-	rand.Read(b)
-	return fmt.Sprintf("%06d", b)
+type VerifyCodeRequest struct {
+	Email string `json:"email" binding:"required"` // Email пользователя
+	Code  string `json:"code" binding:"required"`  // Код верификации, введенный пользователем
+	UUID  string
+}
+
+func VerifyCode() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req VerifyCodeRequest
+
+		// Извлекаем JSON данные из запроса
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid request format.",
+			})
+			c.Abort()
+			return
+		}
+
+		ctx := context.Background()
+		code, err := rdb.Get(ctx, req.UUID).Result()
+		if err != nil || code != req.Code {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid verification code.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Код верный, можно продолжать логику (например, активировать пользователя)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Code verified successfully.",
+		})
+	}
 }
 
 // Заглушка функции отправки кода на email

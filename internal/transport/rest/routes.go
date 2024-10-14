@@ -1,8 +1,9 @@
 package rest
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
+	middleware "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/middelfare"
 	user2 "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/user"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
@@ -12,7 +13,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	userRepository, err := repository.InitDB()
+	userRepository, err := postgres.InitDB()
 	if err != nil {
 		panic("Pizda")
 	}
@@ -25,7 +26,8 @@ func SetupRouter() *gin.Engine {
 
 	// Маршруты для аутентификации и авторизации
 	//r.POST("/login", us.)
-	r.POST("/register", us.RegisterUser)
+	r.POST("/register", middleware.EmailValidator())
+	r.POST("/veryfi", us.RegisterUser)
 
 	// Проверка доступности сервиса
 	r.GET("/ping", func(c *gin.Context) {

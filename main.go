@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository"
+	middleware "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/middelfare"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 	"github.com/joho/godotenv"
@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	defer repository.Db.Close()
+	//defer repository.Db.Close()
+
+	middleware.InitRedis()
 	//db.InitDB(db.ConnStr)
 	//Загрузка переменных окружения из файла .env
 	err := godotenv.Load()
