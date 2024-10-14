@@ -1,4 +1,4 @@
-package services
+package user
 
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
@@ -6,21 +6,6 @@ import (
 	_ "github.com/lib/pq"
 	"net/http"
 )
-
-type RegisterRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	About    string `json:"about"`
-	Photo    []byte `json:"photo"`
-}
-
-type UserServiceInterface interface {
-	GetUserProfile(c *gin.Context)
-	UpdateUserProfile(c *gin.Context)
-	CheckUserByUsername(c *gin.Context)
-	RegisterUser(c *gin.Context)
-}
 
 type UserService struct {
 	userRepo user.UserRepository

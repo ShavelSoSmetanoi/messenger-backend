@@ -10,55 +10,6 @@ import (
 	"time"
 )
 
-//var DB *sql.DB
-//
-//var ConnStr string = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
-//	os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
-//
-////func InitDB(connectionString string) (*user.PostgresUserRepository, error) {
-////	//var err error
-////	//DB, err = sql.Open("postgres", connectionString)
-////	//if err != nil {
-////	//	log.Fatalf("Failed to open database: %v", err)
-////	//}
-////	//
-////	//// Ensure the database connection is closed when the function returns
-////	//defer func() {
-////	//	if err := DB.Close(); err != nil {
-////	//		log.Fatalf("Failed to close database: %v", err)
-////	//	}
-////	//}()
-////	//
-////	//log.Println("Database connected successfully")
-////
-////	db, err := sql.Open("postgres", connectionString)
-////	if err != nil {
-////		log.Fatalf("Failed to open database: %v", err)
-////		return nil, err
-////	}
-////
-////	// Настройка параметров пула подключений
-////	db.SetMaxOpenConns(25)                 // Максимальное количество открытых соединений
-////	db.SetMaxIdleConns(25)                 // Максимальное количество "спящих" соединений
-////	db.SetConnMaxLifetime(time.Minute * 5) // Максимальное время жизни соединения
-////
-////	log.Println("Database connected successfully")
-////
-////	return &user.PostgresUserRepository{DB: db}, nil
-////}
-//
-//func InitDB(connectionString string) (*sql.DB, error) {
-//	var err error
-//	DB, err = sql.Open("postgres", connectionString)
-//	if err != nil {
-//		panic("pizda")
-//	}
-//
-//	log.Println("Database connected successfully")
-//
-//	return DB, nil // Возвращаем соединение и nil для ошибки
-//}
-
 var Db *pgxpool.Pool
 
 func InitDB() (*pgxpool.Pool, error) {
@@ -75,7 +26,6 @@ func InitDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	// Настройка параметров пула подключений
 	config.MaxConns = 25                 // Максимальное количество открытых соединений
 	config.MaxConnIdleTime = time.Minute // Максимальное время "ожидания" соединения
 

@@ -3,7 +3,7 @@ package rest
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
+	user2 "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/user"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"net/http"
@@ -21,7 +21,7 @@ func SetupRouter() *gin.Engine {
 	rp := user.NewPostgresUserRepository(userRepository)
 
 	// Создание сервиса пользователей
-	us := services.NewUserService(rp)
+	us := user2.NewUserService(rp)
 
 	// Маршруты для аутентификации и авторизации
 	//r.POST("/login", us.)

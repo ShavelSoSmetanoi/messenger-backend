@@ -1,18 +1,18 @@
 package rest
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services/user"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 // UserTransport - транспортный слой для управления пользователями
 type UserTransport struct {
-	userService services.UserServiceInterface
+	userService user.UserServiceInterface
 }
 
 // NewUserTransport создает новый объект UserTransport
-func NewUserTransport(service services.UserServiceInterface) *UserTransport {
+func NewUserTransport(service user.UserServiceInterface) *UserTransport {
 	return &UserTransport{
 		userService: service,
 	}

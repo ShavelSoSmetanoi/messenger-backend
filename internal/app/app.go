@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
+	user2 "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/user"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -14,7 +14,7 @@ import (
 // App - структура для основного приложения
 type App struct {
 	router        *gin.Engine
-	userService   services.UserServiceInterface
+	userService   user2.UserServiceInterface
 	userTransport *rest.UserTransport
 }
 
@@ -50,7 +50,7 @@ func NewApp() *App {
 	userRepo := user.NewPostgresUserRepository(DB)
 
 	// Инициализация сервисов
-	userService := services.NewUserService(userRepo)
+	userService := user2.NewUserService(userRepo)
 
 	// Инициализация транспортных слоев
 	userTransport := rest.NewUserTransport(userService)
