@@ -1,14 +1,19 @@
-version: '3'
+version: '3.8'
+
 services:
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: msg-backend
-#    expose:
-#      - "8080"
-#    networks:
-#      - app-network
+  postgres:
+    image: postgres:15
+    container_name: my_postgres_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   nginx:
     image: nginx:latest
@@ -26,10 +31,23 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Подключаем конфиг
-    command: redis-server /usr/local/etc/redis/redis.conf  # Запускаем Redis с конфигом
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - app-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: msg-backend
+    expose:
+      - "8080"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
 
 networks:
   app-network:
