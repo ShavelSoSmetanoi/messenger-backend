@@ -18,13 +18,24 @@ func NewUserService(repo user.UserRepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(c *gin.Context) {
-	var registerRequest RegisterRequest
-	if err := c.ShouldBindJSON(&registerRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Получаем данные из контекста
+	userData, exists := c.Get("userData")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "User data not found.",
+		})
 		return
 	}
 
-	err := s.userRepo.CreateUser(registerRequest.Username, registerRequest.Email, registerRequest.Password, registerRequest.About, registerRequest.Photo)
+	// Приводим данные к типу map[string]string
+	data := userData.(map[string]string)
+
+	// Теперь у тебя есть данные, например:
+	username := data["username"]
+	email := data["email"]
+	password := data["password"]
+
+	err := s.userRepo.CreateUser(username, email, password, "", nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return

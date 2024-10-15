@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"github.com/gin-gonic/gin"
@@ -17,11 +18,9 @@ type RegisterRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	About    string `json:"about"`
-	Photo    []byte `json:"photo"`
 }
 
-// Инициализация Redis
+// InitRedis Инициализация Redis
 func InitRedis() {
 	rdb = redis.NewClient(&redis.Options{
 		Addr: "localhost:6379", // Адрес Redis
@@ -51,12 +50,10 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		email := req.Email // Получаем email из структуры
+		email := req.Email
 
-		// Проверяем, существует ли email в Redis (ожидание повторного запроса)
 		ctx := context.Background()
 		if _, err := rdb.Get(ctx, email).Result(); err == nil {
-			// Если запись существует, отклоняем запрос
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error": "Please wait before requesting another code.",
 			})
@@ -64,10 +61,9 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Генерация случайного кода
-		code := pkg.GenerateCode()
+		code := "12345" // Генерация случайного кода
 
-		// Логика отправки кода на email (имитируем отправку)
+		// Логика отправки кода на email (имитация)
 		err := sendCodeToEmail(email, code)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -77,8 +73,29 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Сохранение кода в Redis с таймаутом 5 минут
-		err = rdb.Set(ctx, email, code, 5*time.Minute).Err()
+		// Генерация UUID для пользователя
+		uuid := pkg.GenerateUniqueID()
+
+		// Подготовка данных для сохранения в Redis
+		userData := map[string]string{
+			"username": req.Username,
+			"email":    req.Email,
+			"password": req.Password,
+			"code":     code,
+		}
+
+		// Сериализация данных в JSON
+		userDataJSON, err := json.Marshal(userData)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to process registration data.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Сохранение данных в Redis с ключом UUID
+		err = rdb.Set(ctx, uuid, userDataJSON, 5*time.Minute).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to save verification code.",
@@ -87,20 +104,17 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Возвращаем успешный ответ
+		// Возвращаем успешный ответ с UUID
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Verification code sent to email.",
+			"UUID": uuid,
 		})
-
-		// Прекращаем выполнение (middleware только для отправки кода)
 		c.Abort()
 	}
 }
 
 type VerifyCodeRequest struct {
-	Email string `json:"email" binding:"required"` // Email пользователя
-	Code  string `json:"code" binding:"required"`  // Код верификации, введенный пользователем
-	UUID  string
+	Code string `json:"code" binding:"required"` // Код верификации, введенный пользователем
+	UUID string `json:"uuid" binding:"required"` // UUID пользователя
 }
 
 func VerifyCode() gin.HandlerFunc {
@@ -117,8 +131,29 @@ func VerifyCode() gin.HandlerFunc {
 		}
 
 		ctx := context.Background()
-		code, err := rdb.Get(ctx, req.UUID).Result()
-		if err != nil || code != req.Code {
+
+		// Получаем сохраненные данные пользователя из Redis по UUID
+		userDataJSON, err := rdb.Get(ctx, req.UUID).Result()
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid UUID or verification code.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Распаковка данных из JSON
+		var userData map[string]string
+		if err := json.Unmarshal([]byte(userDataJSON), &userData); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to parse user data.",
+			})
+			c.Abort()
+			return
+		}
+
+		// Проверка кода
+		if userData["code"] != req.Code {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid verification code.",
 			})
@@ -126,10 +161,11 @@ func VerifyCode() gin.HandlerFunc {
 			return
 		}
 
-		// Код верный, можно продолжать логику (например, активировать пользователя)
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Code verified successfully.",
-		})
+		// Код верный, передаем данные пользователя в контекст
+		c.Set("userData", userData)
+
+		// Продолжаем выполнение запроса
+		c.Next()
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Функция для генерации случайного 6-значного кода
+// GenerateCode - Функция для генерации случайного 6-значного кода
 func GenerateCode() string {
 	b := make([]byte, 3)
 	rand.Read(b)

@@ -26,8 +26,8 @@ func SetupRouter() *gin.Engine {
 
 	// Маршруты для аутентификации и авторизации
 	//r.POST("/login", us.)
-	r.POST("/register", middleware.EmailValidator())
-	r.POST("/veryfi", us.RegisterUser)
+	r.POST("/verify", middleware.EmailValidator())
+	r.POST("/register", middleware.VerifyCode(), us.RegisterUser)
 
 	// Проверка доступности сервиса
 	r.GET("/ping", func(c *gin.Context) {
