@@ -55,6 +55,7 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 	return nil
 }
 
+// autch
 func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
 	var user models.User
 
