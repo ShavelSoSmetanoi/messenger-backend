@@ -9,10 +9,6 @@ import (
 )
 
 func main() {
-	//defer repository.Db.Close()
-	//transport.InitRedis()
-
-	//db.InitDB(db.ConnStr)
 	//Загрузка переменных окружения из файла .env
 	err := godotenv.Load()
 	if err != nil {

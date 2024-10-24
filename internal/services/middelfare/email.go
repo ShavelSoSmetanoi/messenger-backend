@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	redis "github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/redis"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -34,7 +35,7 @@ func EmailValidator() gin.HandlerFunc {
 		email := req.Email
 
 		ctx := context.Background()
-		if _, err := rdb.Get(ctx, email).Result(); err == nil {
+		if _, err := redis.Rdb.Get(ctx, email).Result(); err == nil {
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error": "Please wait before requesting another code.",
 			})
@@ -76,7 +77,7 @@ func EmailValidator() gin.HandlerFunc {
 		}
 
 		// Сохранение данных в Redis с ключом UUID
-		err = rdb.Set(ctx, uuid, userDataJSON, 5*time.Minute).Err()
+		err = redis.Rdb.Set(ctx, uuid, userDataJSON, 5*time.Minute).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to save verification code.",
@@ -114,7 +115,7 @@ func VerifyCode() gin.HandlerFunc {
 		ctx := context.Background()
 
 		// Получаем сохраненные данные пользователя из Redis по UUID
-		userDataJSON, err := rdb.Get(ctx, req.UUID).Result()
+		userDataJSON, err := redis.Rdb.Get(ctx, req.UUID).Result()
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid UUID or verification code.",

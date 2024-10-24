@@ -3,6 +3,7 @@ package rest
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
+	rd "github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/redis"
 	middleware "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/middelfare"
 	user2 "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/user"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	rd.InitRedis()
 	userRepository, err := postgres.InitDB()
 	if err != nil {
 		panic("Pizda")
