@@ -6,40 +6,21 @@ import (
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"net/http"
 	"time"
 )
 
-var rdb *redis.Client
-
 // RegisterRequest структура для запроса регистрации
-type RegisterRequest struct {
+type EmailValidate struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// InitRedis Инициализация Redis
-func InitRedis() {
-	rdb = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379", // Адрес Redis
-		DB:   0,                // Используемая база
-	})
-
-	// Проверяем соединение с Redis
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		panic(fmt.Errorf("could not connect to Redis: %v", err))
-	}
-}
-
 // EmailValidator отправляет код на почту и устанавливает таймаут
 func EmailValidator() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req RegisterRequest
+		var req EmailValidate
 
 		// Извлекаем JSON данные из запроса
 		if err := c.ShouldBindJSON(&req); err != nil {
