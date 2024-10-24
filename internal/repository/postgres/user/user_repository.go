@@ -38,7 +38,7 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 	uniqueID := pkg.GenerateUniqueID()
 
 	// Выполнение запроса на вставку данных пользователя
-	query := `INSERT INTO users (username, email, password, photo, unique_id, about, registration_date) 
+	query := `INSERT INTO users (username, email, password, photo, unique_id, about, created_at) 
 	          VALUES ($1, $2, $3, $4, $5, $6, NOW())`
 
 	_, err = r.DB.Exec(context.Background(), query, username, email, hashedPassword, photo, uniqueID, about)
