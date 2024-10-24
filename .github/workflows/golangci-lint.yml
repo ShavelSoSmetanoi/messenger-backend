@@ -3,10 +3,10 @@ name: Lint Go Code
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   golangci-lint:
