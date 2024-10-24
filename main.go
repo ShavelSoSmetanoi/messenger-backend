@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	//Hello
 	//Загрузка переменных окружения из файла .env
 	err := godotenv.Load()
 	if err != nil {
