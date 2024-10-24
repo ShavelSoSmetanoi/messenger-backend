@@ -2,8 +2,11 @@ package user
 
 import (
 	"context"
+	"errors"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -12,7 +15,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(username string, email string, password string, about string, photo []byte) error
-	//AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
+	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
 	//GetUserByID(ctx context.Context, userID string) (*models.User, error)
 	//UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error
 	//GetUserByUsername(ctx context.Context, username string) (*models.User, error)
@@ -52,29 +55,38 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 	return nil
 }
 
-//func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
-//	var user *models.User
-//
-//	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, password, photo, unique_id, about FROM users WHERE username = $1", username).
-//		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
-//	if err != nil {
-//		if err == sql.ErrNoRows {
-//			log.Printf("No user found with username: %s", username)
-//			return nil, errors.New("invalid credentials")
-//		}
-//		log.Printf("Error querying user: %v", err)
-//		return nil, err
-//	}
-//
-//	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-//	if err != nil {
-//		log.Printf("Password mismatch for user: %s", username)
-//		return nil, errors.New("invalid credentials")
-//	}
-//
-//	return user, nil
-//}
-//
+func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
+	var user models.User
+
+	// Выполнение запроса на получение данных пользователя
+	query := `SELECT id, username, email, password, photo, unique_id, about 
+	          FROM users WHERE username = $1`
+	err := r.DB.QueryRow(ctx, query, username).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
+
+	if err != nil {
+		// Если пользователь не найден
+		if err == pgx.ErrNoRows {
+			log.Printf("No user found with username: %s", username)
+			return nil, errors.New("invalid credentials")
+		}
+		// Логирование ошибки запроса
+		log.Printf("Error querying user: %v", err)
+		return nil, err
+	}
+
+	// Сравнение хешированного пароля
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		log.Printf("Password mismatch for user: %s", username)
+		return nil, errors.New("invalid credentials")
+	}
+
+	// Логирование успешной аутентификации
+	log.Printf("User %s authenticated successfully", username)
+	return &user, nil
+}
+
 //func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
 //	var user *models.User
 //
