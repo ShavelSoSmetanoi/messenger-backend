@@ -1,0 +1,47 @@
+name: Deploy Go Application
+
+on:
+  push:
+    branches:
+      - main  # Триггерится при push на основную ветку
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.19' # Задайте версию Go, которую используете
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build binary
+        run: GOOS=linux GOARCH=amd64 go build -o myapp . # Собираем бинарник для Linux
+
+      - name: Archive binary
+        run: tar -czvf myapp.tar.gz myapp
+
+      - name: Deploy to server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          scp myapp.tar.gz $SERVER_USER@$SERVER_IP:~/myapp.tar.gz
+          ssh $SERVER_USER@$SERVER_IP << 'EOF'
+            tar -xzvf myapp.tar.gz
+            sudo systemctl stop myapp || true # Останавливаем приложение (если оно уже запущено)
+            sudo mv myapp /usr/local/bin/myapp # Перемещаем бинарник в нужное место
+            sudo systemctl start myapp # Запускаем приложение
+          EOF
