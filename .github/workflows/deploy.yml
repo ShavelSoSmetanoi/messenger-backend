@@ -3,7 +3,7 @@ name: Deploy Go Application
 on:
   push:
     branches:
-      - main  # Триггерится при push на основную ветку
+      - master  # Триггерится при push на основную ветку
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.19' # Задайте версию Go, которую используете
+          go-version: '1.22' # Задайте версию Go, которую используете
 
       - name: Install dependencies
         run: go mod download
