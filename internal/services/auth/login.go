@@ -1,16 +1,17 @@
 package auth
 
 import (
-	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwt"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwt"
+	"github.com/ShavelSoSmetanoi/messenger-backend/pkg/JWT"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AuthHandler struct {
-	authService services.AuthService
+	authService jwt.UserTokenRepository
 }
 
-func NewAuthHandler(authService services.AuthService) *AuthHandler {
+func NewAuthHandler(authService jwt.UserTokenRepository) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
@@ -32,7 +33,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authService.GenerateToken(userID)
+	token, err := JWT.CreateJWT(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

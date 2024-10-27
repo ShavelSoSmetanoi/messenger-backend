@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+type UserTokenRepositoryInterface interface {
+	SaveToken(ctx context.Context, userID, token string) error
+	DeleteToken(ctx context.Context, token string) error
+	IsTokenValid(ctx context.Context, token string) (bool, error)
+	GetTokensByUserID(ctx context.Context, userID string) ([]models.UserToken, error)
+}
+
 type UserTokenRepository struct {
 	DB *pgxpool.Pool
 }
