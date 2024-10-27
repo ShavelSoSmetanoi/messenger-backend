@@ -3,7 +3,7 @@ name: Deploy Go Application
 on:
   push:
     branches:
-      - master  # Триггерится при push на основную ветку
+      - main  # Триггерится при push на основную ветку
 
 jobs:
   build:
