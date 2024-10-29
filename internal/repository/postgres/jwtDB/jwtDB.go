@@ -1,4 +1,4 @@
-package jwt
+package jwtDB
 
 import (
 	"context"

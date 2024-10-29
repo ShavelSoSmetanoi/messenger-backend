@@ -1,17 +1,19 @@
 package auth
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwt"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwtDB"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AuthHandler struct {
-	authService jwt.UserTokenRepository
+	authService jwtDB.UserTokenRepository
 }
 
-func NewAuthHandler(authService jwt.UserTokenRepository) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func NewAuthHandler(repo jwtDB.UserTokenRepository) *AuthHandler {
+	return &AuthHandler{
+		authService: repo,
+	}
 }
 
 type LoginRequest struct {
@@ -20,12 +22,12 @@ type LoginRequest struct {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var loginRequest LoginRequest
-	if err := c.ShouldBindJSON(&loginRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	//
+	//var loginRequest LoginRequest
+	//if err := c.ShouldBindJSON(&loginRequest); err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//	return
+	//}
+
 	//userID, err := h.authService.AuthenticateUser(loginRequest.Username, loginRequest.Password)
 	//if err != nil {
 	//	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
@@ -37,6 +39,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 	//	return
 	//}
-
-	//c.JSON(http.StatusOK, gin.H{"token": token})
+	//
+	c.JSON(http.StatusOK, gin.H{"token": "idi v pizdy"})
 }

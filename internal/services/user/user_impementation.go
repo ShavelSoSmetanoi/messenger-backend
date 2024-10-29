@@ -11,6 +11,12 @@ type UserService struct {
 	userRepo userDB.UserRepository
 }
 
+func NewUserService(repo userDB.UserRepository) *UserService {
+	return &UserService{
+		userRepo: repo,
+	}
+}
+
 func (s *UserService) GetUserProfile(c *gin.Context) {
 	//TODO implement me
 	panic("implement me")
@@ -24,12 +30,6 @@ func (s *UserService) UpdateUserProfile(c *gin.Context) {
 func (s *UserService) CheckUserByUsername(c *gin.Context) {
 	//TODO implement me
 	panic("implement me")
-}
-
-func NewUserService(repo userDB.UserRepository) *UserService {
-	return &UserService{
-		userRepo: repo,
-	}
 }
 
 func (s *UserService) RegisterUser(c *gin.Context) {

@@ -12,6 +12,8 @@ func (h *Handler) InitAuthRouter(r *gin.Engine) {
 	r.POST("/verify-email", middleware.EmailValidator())
 	r.POST("/register", middleware.VerifyCode(), h.services.User.RegisterUser)
 
+	r.POST("/login", h.services.Auth.Login)
+
 	// Проверка доступности сервиса
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
