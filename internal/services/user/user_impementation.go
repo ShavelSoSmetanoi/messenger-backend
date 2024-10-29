@@ -1,17 +1,17 @@
 package user
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/user"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/userDB"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"net/http"
 )
 
 type UserService struct {
-	userRepo user.UserRepository
+	userRepo userDB.UserRepository
 }
 
-func NewUserService(repo user.UserRepository) *UserService {
+func NewUserService(repo userDB.UserRepository) *UserService {
 	return &UserService{
 		userRepo: repo,
 	}

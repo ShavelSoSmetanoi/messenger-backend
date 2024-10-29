@@ -26,8 +26,8 @@ func InitDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	config.MaxConns = 25                 // Максимальное количество открытых соединений
-	config.MaxConnIdleTime = time.Minute // Максимальное время "ожидания" соединения
+	config.MaxConns = 25                     // Максимальное количество открытых соединений
+	config.MaxConnIdleTime = time.Minute * 2 // Максимальное время "ожидания" соединения
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {

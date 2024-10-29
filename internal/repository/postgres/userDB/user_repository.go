@@ -1,4 +1,4 @@
-package user
+package userDB
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
@@ -23,6 +24,26 @@ type UserRepository interface {
 
 type PostgresUserRepository struct {
 	DB *pgxpool.Pool
+}
+
+func (r *PostgresUserRepository) GetUserProfile(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *PostgresUserRepository) UpdateUserProfile(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *PostgresUserRepository) CheckUserByUsername(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *PostgresUserRepository) RegisterUser(c *gin.Context) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {

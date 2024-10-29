@@ -1,28 +1,16 @@
 package main
 
 import (
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/app"
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"log"
 )
 
 func main() {
 	//Hello
 	//Загрузка переменных окружения из файла .env
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
 
-	//Настройка маршрутизатора
-	router := rest.SetupRouter()
-
-	// Запуск HTTP-сервера
-	if err := router.Run(); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
-	}
+	app.Run()
 
 	//// Создание нового приложения
 	//myApp := app.NewApp()
