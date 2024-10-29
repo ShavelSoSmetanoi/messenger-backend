@@ -7,10 +7,10 @@ import (
 )
 
 type AuthHandler struct {
-	authService jwtDB.UserTokenRepository
+	authService jwtDB.UserTokenRepositoryInterface
 }
 
-func NewAuthHandler(repo jwtDB.UserTokenRepository) *AuthHandler {
+func NewAuthHandler(repo jwtDB.UserTokenRepositoryInterface) *AuthHandler {
 	return &AuthHandler{
 		authService: repo,
 	}
