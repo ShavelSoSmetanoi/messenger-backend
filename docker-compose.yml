@@ -36,6 +36,20 @@ services:
     networks:
       - app-network
 
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+#    container_name: elasticsearch
+#    environment:
+#      - discovery.type=single-node
+#      - ES_JAVA_OPTS=-Xms512m -Xmx512m  # Установка ограничений по памяти для Elasticsearch
+#    ports:
+#      - "9200:9200"  # API Elasticsearch
+#      - "9300:9300"  # Порт для кластерных соединений
+#    networks:
+#      - app-network
+#    volumes:
+#      - es_data:/usr/share/elasticsearch/data
+
   app:
     build:
       context: .

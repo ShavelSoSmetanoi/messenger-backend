@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (h *Handler) InitSetupRouter(r *gin.Engine) {
+func (h *Handler) InitAuthRouter(r *gin.Engine) {
 	// Маршруты для аутентификации и авторизации
 	r.POST("/verify-email", middleware.EmailValidator())
 	r.POST("/register", middleware.VerifyCode(), h.services.User.RegisterUser)

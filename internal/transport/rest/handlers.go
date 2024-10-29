@@ -20,7 +20,7 @@ func (h *Handler) Init() *gin.Engine {
 
 	r.Group("/")
 	{
-		h.InitSetupRouter(r)
+		h.InitAuthRouter(r)
 	}
 
 	return r

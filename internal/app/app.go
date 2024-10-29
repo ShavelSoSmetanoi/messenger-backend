@@ -8,7 +8,7 @@ import (
 )
 
 func Run() {
-	config.SetapConfig()
+	config.SetupConfig()
 
 	// Инициализация сервисов
 	services := services2.InitServices()

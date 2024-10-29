@@ -151,7 +151,7 @@ func VerifyCode() gin.HandlerFunc {
 	}
 }
 
-// Заглушка функции отправки кода на email
+// TODO: Заглушка функции отправки кода на email
 func sendCodeToEmail(email, code string) error {
 	// Логика отправки email с кодом (например, с использованием внешнего сервиса)
 	fmt.Printf("Sent verification code %s to %s\n", code, email)

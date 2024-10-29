@@ -15,7 +15,6 @@ func InitServices() *Services {
 	// Создание репозитория пользователей
 	rp := userDB.NewPostgresUserRepository(postgres.Db)
 	us := user.NewUserService(rp)
-	//rp := userDB.NewPostgresUserRepository(postgres.Db)
 
 	return &Services{
 		User: us,
