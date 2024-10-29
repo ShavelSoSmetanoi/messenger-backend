@@ -15,7 +15,7 @@ func Run() {
 
 	// Создание роутера и инициализация обработчиков
 	handler := rest.NewHandler(services)
-	router := handler.Init() // Передаем роутер из Handlerhandler.Init()
+	router := handler.Init()
 
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("Ошибка запуска сервера: %v", err)

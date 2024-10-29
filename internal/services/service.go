@@ -14,8 +14,10 @@ type Services struct {
 func InitServices() *Services {
 	// Создание репозитория пользователей
 	rp := userDB.NewPostgresUserRepository(postgres.Db)
+	us := user.NewUserService(rp)
+	//rp := userDB.NewPostgresUserRepository(postgres.Db)
 
 	return &Services{
-		User: rp,
+		User: us,
 	}
 }
