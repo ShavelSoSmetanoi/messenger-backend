@@ -39,7 +39,7 @@ func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *
 	return nil
 }
 
-// GetMessagesByChatID возвращает все сообщения в чате
+// TODO GetMessagesByChatID возвращает все сообщения в чате, 50 сообщений лимит
 func (r *PostgresMessageRepository) GetMessagesByChatID(ctx context.Context, chatID int) ([]models.Message, error) {
 	query := `SELECT id, chat_id, user_id, content, created_at 
               FROM messages WHERE chat_id = $1`

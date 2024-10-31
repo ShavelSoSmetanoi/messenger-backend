@@ -21,7 +21,8 @@ func NewUserService(repo userDB.UserRepository) *UserService {
 	}
 }
 
-func (s *UserService) RegisterUser(c *gin.Context) {
+// RegisterUser регистрирует нового пользователя
+func (h *UserService) RegisterUser(c *gin.Context) {
 	// Получаем данные из контекста
 	userData, exists := c.Get("userData")
 	if !exists {
@@ -39,7 +40,7 @@ func (s *UserService) RegisterUser(c *gin.Context) {
 	email := data["email"]
 	password := data["password"]
 
-	err := s.userRepo.CreateUser(username, email, password, "", nil)
+	err := h.userRepo.CreateUser(username, email, password, "", nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
@@ -71,7 +72,7 @@ func (h *UserService) GetUserProfile(c *gin.Context) {
 
 	// Возвращаем данные пользователя в формате JSON
 	c.JSON(http.StatusOK, gin.H{
-		"id":       user.ID,
+		"uuid":     user.UniqueId,
 		"username": user.Username,
 		"email":    user.Email,
 		"photo":    user.Photo,
