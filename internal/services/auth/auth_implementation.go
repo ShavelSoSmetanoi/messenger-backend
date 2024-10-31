@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"context"
+	"errors"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwtDB"
-	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/ShavelSoSmetanoi/messenger-backend/pkg/JWT"
 )
 
 type AuthHandler struct {
@@ -16,29 +17,43 @@ func NewAuthHandler(repo jwtDB.UserTokenRepositoryInterface) *AuthHandler {
 	}
 }
 
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
+// Login authenticates the user, manages tokens, and returns a valid token or an error.
+func (h *AuthHandler) Login(username, password string) (string, error) {
+	// Аутентификация пользователя (предполагается, что models.AuthenticateUser возвращает user.ID при успешной проверке)
+	user, err := h.authService.AuthenticateUser(context.Background(), username, password)
+	if err != nil {
+		return "", errors.New("invalid username or password")
+	}
 
-func (h *AuthHandler) Login(c *gin.Context) {
-	//var loginRequest LoginRequest
-	//if err := c.ShouldBindJSON(&loginRequest); err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
+	// Получение токенов, связанных с пользователем
+	tokens, err := h.authService.GetTokensByUserID(context.Background(), user.ID)
+	if err != nil {
+		return "", errors.New("failed to retrieve tokens")
+	}
 
-	//userID, err := h.authService.AuthenticateUser(loginRequest.Username, loginRequest.Password)
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-	//	return
-	//}
-	//
-	//token, err := JWT.CreateJWT(userID)
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-	//	return
-	//}
-	//
-	c.JSON(http.StatusOK, gin.H{"token": "idi v pizdy"})
+	// Проверка валидности токенов
+	var validToken string
+	for _, t := range tokens {
+		valid, err := h.authService.IsTokenValid(context.Background(), t.Token)
+		if err == nil && valid {
+			validToken = t.Token
+			break
+		}
+	}
+
+	// Создание нового токена, если нет действующего
+	if validToken == "" {
+		token, err := JWT.CreateJWT(user.ID)
+		if err != nil {
+			return "", errors.New("failed to generate token")
+		}
+		// Сохранение нового токена
+		if err := h.authService.SaveToken(context.Background(), user.ID, token); err != nil {
+			return "", errors.New("failed to save token")
+		}
+		validToken = token
+	}
+
+	// Возврат действующего или вновь созданного токена
+	return validToken, nil
 }

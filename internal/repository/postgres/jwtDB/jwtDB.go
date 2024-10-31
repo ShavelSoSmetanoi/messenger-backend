@@ -7,10 +7,13 @@ import (
 	_ "github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+	//"runtime/debug"
 	"time"
 )
 
 type UserTokenRepositoryInterface interface {
+	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
 	SaveToken(ctx context.Context, userID, token string) error
 	DeleteToken(ctx context.Context, token string) error
 	IsTokenValid(ctx context.Context, token string) (bool, error)
@@ -23,6 +26,26 @@ type UserTokenRepository struct {
 
 func NewUserTokenRepository(db *pgxpool.Pool) *UserTokenRepository {
 	return &UserTokenRepository{DB: db}
+}
+
+func (r *UserTokenRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
+	var user models.User
+
+	err := r.DB.QueryRow(ctx, "SELECT id, username, email, password, photo, unique_id, about FROM users WHERE username = $1", username).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, errors.New("invalid credentials")
+		}
+		return nil, err
+	}
+
+	// Проверка пароля
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	return &user, nil
 }
 
 // SaveToken сохраняет токен пользователя в базе данных
