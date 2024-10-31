@@ -2,7 +2,9 @@ package rest
 
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
+	middleware "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/middelfare"
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 type Handler struct {
@@ -22,6 +24,12 @@ func (h *Handler) Init() *gin.Engine {
 	{
 		h.InitAuthRouter(r)
 	}
+
+	// TODO - сделать защищеные маршруты
+	authUsers := r.Group("/")
+	authUsers.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET")))
+
+	h.InitUserRouter(authUsers)
 
 	return r
 }

@@ -16,9 +16,9 @@ import (
 type UserRepository interface {
 	CreateUser(username string, email string, password string, about string, photo []byte) error
 	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
-	//GetUserByID(ctx context.Context, userID string) (*models.User, error)
-	//UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error
-	//GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	GetUserByID(ctx context.Context, userID string) (*models.User, error)
+	UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 }
 
 type PostgresUserRepository struct {
@@ -29,6 +29,7 @@ func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
 	return &PostgresUserRepository{DB: db}
 }
 
+// Создание пользователя
 func (r *PostgresUserRepository) CreateUser(username, email, password, about string, photo []byte) error {
 	// Хэширование пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -55,7 +56,7 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 	return nil
 }
 
-// autch
+// Проверка аунтификакации пользователя
 func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
 	var user models.User
 
@@ -88,35 +89,64 @@ func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username,
 	return &user, nil
 }
 
-//func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
-//	var user *models.User
-//
-//	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, photo, unique_id, about FROM users WHERE id = $1", userID).
-//		Scan(&user.ID, &user.Username, &user.Email, &user.Photo, &user.UniqueId, &user.About)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return user, nil
-//}
-//
-//func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
-//	_, err := r.db.ExecContext(ctx, "UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4",
-//		userUpdate.Email, userUpdate.About, userUpdate.Photo, userID)
-//	return err
-//}
-//
-//func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-//	var user *models.User
-//	query := "SELECT id, username, email, password, photo, unique_id, about FROM users WHERE username = $1"
-//
-//	err := r.db.QueryRowContext(ctx, query, username).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
-//	if err != nil {
-//		if err == sql.ErrNoRows {
-//			return nil, nil // Пользователь не найден
-//		}
-//		return nil, fmt.Errorf("error getting user by username: %w", err)
-//	}
-//
-//	return user, nil
-//}
+// Получение пользователя по ID
+func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
+	var user models.User
+
+	// Выполнение запроса на получение данных пользователя
+	query := `SELECT id, username, email, photo, unique_id, about 
+	          FROM users WHERE id = $1`
+	err := r.DB.QueryRow(ctx, query, userID).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Photo, &user.UniqueId, &user.About)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			log.Printf("No user found with ID: %s", userID)
+			return nil, errors.New("user not found")
+		}
+		// Логирование ошибки запроса
+		log.Printf("Error querying user by ID: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// Обновление пользователя
+func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
+	// Выполнение запроса на обновление данных пользователя
+	query := `UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4`
+	_, err := r.DB.Exec(ctx, query, userUpdate.Email, userUpdate.About, userUpdate.Photo, userID)
+
+	if err != nil {
+		log.Printf("Error updating user with ID %s: %v", userID, err)
+		return err
+	}
+
+	// Логирование успешного обновления
+	log.Printf("User with ID %s updated successfully", userID)
+	return nil
+}
+
+// Получение пользователя по имени пользователя
+func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	var user models.User
+
+	// Выполнение запроса на получение данных пользователя
+	query := `SELECT id, username, email, password, photo, unique_id, about 
+	          FROM users WHERE username = $1`
+	err := r.DB.QueryRow(ctx, query, username).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			log.Printf("No user found with username: %s", username)
+			return nil, nil // Пользователь не найден
+		}
+		// Логирование ошибки запроса
+		log.Printf("Error querying user by username: %v", err)
+		return nil, err
+	}
+
+	return &user, nil
+}
