@@ -31,7 +31,7 @@ func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *
 	_, err := r.DB.Exec(ctx, query, message.ChatID, message.UserID, message.Content, message.CreatedAt)
 	if err != nil {
 		log.Printf("Error creating message: %v", err)
-		log.Printf("Message details: ChatID=%d, UserID=%d, Content=%s, CreatedAt=%v",
+		log.Printf("Message details: ChatID=%d, UserID=%s, Content=%s, CreatedAt=%v",
 			message.ChatID, message.UserID, message.Content, message.CreatedAt)
 		return err
 	}

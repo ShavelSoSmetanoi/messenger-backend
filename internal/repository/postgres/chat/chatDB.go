@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"strings"
@@ -25,7 +26,7 @@ func NewPostgresChatRepository(db *pgxpool.Pool) *PostgresChatRepository {
 	return &PostgresChatRepository{DB: db}
 }
 
-// GetUserIDsByNicknames получает идентификаторы пользователей по списку никнеймов
+// TODO - проверить!
 func (r *PostgresChatRepository) GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error) {
 	if len(nicknames) == 0 {
 		log.Println("No nicknames provided")
@@ -71,7 +72,11 @@ func (r *PostgresChatRepository) CreateChat(ctx context.Context, chat *models.Ch
 		log.Printf("Error starting transaction: %v", err)
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
+			log.Printf("Error rolling back transaction: %v", err)
+		}
+	}()
 
 	var chatID int
 	err = tx.QueryRow(ctx, "INSERT INTO chats (name, created_at) VALUES ($1, $2) RETURNING id", chat.Name, chat.CreatedAt).Scan(&chatID)
