@@ -13,9 +13,10 @@ import (
 )
 
 type ChatRepository interface {
-	GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error)
 	CreateChat(ctx context.Context, chat *models.Chat, participants []int) error
+	GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error)
 	GetChatsByUserID(ctx context.Context, userID int) ([]models.Chat, error)
+	//DeleteChat(ctx context.Context, chatID int) error
 }
 
 type PostgresChatRepository struct {
@@ -130,3 +131,7 @@ func (r *PostgresChatRepository) GetChatsByUserID(ctx context.Context, userID in
 
 	return chats, nil
 }
+
+//func (r *PostgresChatRepository) DeleteChat(ctx context.Context, chatID int) {
+//
+//}

@@ -30,6 +30,7 @@ func (h *Handler) Init() *gin.Engine {
 	authUsers.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET")))
 
 	h.InitUserRouter(authUsers)
+	h.InitChatRouter(authUsers)
 
 	return r
 }

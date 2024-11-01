@@ -101,19 +101,12 @@ func (h *UserService) UpdateUserProfile(c *gin.Context) {
 }
 
 // CheckUserByUsername проверяет наличие пользователя по имени
-func (h *UserService) CheckUserByUsername(c *gin.Context) {
-	username := c.Param("username")
-
+func (h *UserService) CheckUserByUsername(username string) (*models.User, error) {
 	user, err := h.userRepo.GetUserByUsername(context.Background(), username)
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-			return
-		}
-		log.Printf("Error fetching user by username: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
+		return nil, err // Возвращаем ошибку в случае проблем с получением пользователя
 	}
 
-	c.JSON(http.StatusOK, user)
+	return user, nil
 }

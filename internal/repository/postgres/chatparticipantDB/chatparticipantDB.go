@@ -1,4 +1,4 @@
-package chatparticipant
+package chatparticipantDB
 
 import (
 	"context"
