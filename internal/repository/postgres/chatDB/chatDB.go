@@ -27,7 +27,6 @@ func NewPostgresChatRepository(db *pgxpool.Pool) *PostgresChatRepository {
 	return &PostgresChatRepository{DB: db}
 }
 
-// TODO - проверить!
 func (r *PostgresChatRepository) GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error) {
 	if len(nicknames) == 0 {
 		log.Println("No nicknames provided")

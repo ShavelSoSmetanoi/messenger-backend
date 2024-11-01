@@ -72,6 +72,7 @@ func (h *UserService) GetUserProfile(c *gin.Context) {
 
 	// Возвращаем данные пользователя в формате JSON
 	c.JSON(http.StatusOK, gin.H{
+		"id":       user.ID,
 		"uuid":     user.UniqueId,
 		"username": user.Username,
 		"email":    user.Email,

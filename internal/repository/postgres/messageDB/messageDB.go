@@ -26,13 +26,20 @@ func NewPostgresMessageRepository(db *pgxpool.Pool) *PostgresMessageRepository {
 
 // CreateMessage создает новое сообщение в чате
 func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *models.Message) error {
-	query := `INSERT INTO messages (chat_id, user_id, content, created_at) 
-              VALUES ($1, $2, $3, $4)`
-	_, err := r.DB.Exec(ctx, query, message.ChatID, message.UserID, message.Content, message.CreatedAt)
+	query := `INSERT INTO messages (chat_id, user_id, content, created_at, is_read, read_at) 
+              VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := r.DB.Exec(ctx, query,
+		message.ChatID,
+		message.UserID,
+		message.Content,
+		message.CreatedAt,
+		message.IsRead, // будет false при создании нового сообщения
+		message.ReadAt, // будет NULL при создании нового сообщения
+	)
 	if err != nil {
 		log.Printf("Error creating message: %v", err)
-		log.Printf("Message details: ChatID=%d, UserID=%s, Content=%s, CreatedAt=%v",
-			message.ChatID, message.UserID, message.Content, message.CreatedAt)
+		log.Printf("Message details: ChatID=%d, UserID=%s, Content=%s, CreatedAt=%v, IsRead=%v, ReadAt=%v",
+			message.ChatID, message.UserID, message.Content, message.CreatedAt, message.IsRead, message.ReadAt)
 		return err
 	}
 

@@ -31,6 +31,7 @@ func (h *Handler) Init() *gin.Engine {
 
 	h.InitUserRouter(authUsers)
 	h.InitChatRouter(authUsers)
+	h.InitMessageRouter(authUsers)
 
 	return r
 }
