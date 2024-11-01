@@ -2,7 +2,6 @@ package chat
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatDB"
@@ -39,23 +38,22 @@ func (s *ChatService) CreateChat(userID int, name string, participants []string)
 	}
 
 	// Вызов репозитория для создания чата и добавления участников
-	if err := s.chatRepo.CreateChat(context.Background(), &chat, participantsIDs); err != nil {
+	chatID, err := s.chatRepo.CreateChat(context.Background(), &chat, participantsIDs)
+	if err != nil {
 		return nil, fmt.Errorf("failed to create chat: %v", err)
 	}
 
+	// Устанавливаем ID созданного чата
+	chat.ID = chatID
+
 	return &chat, nil
+
 }
 
 // GetChatsByUserID возвращает все чаты пользователя по его ID
-func (s *ChatService) GetChatsByUserID(userID string) ([]models.Chat, error) {
-	// Преобразуем userID из строки в int
-	intUserID, err := strconv.Atoi(userID)
-	if err != nil {
-		return nil, errors.New("invalid user ID format")
-	}
-
+func (s *ChatService) GetChatsByUserID(userID int) ([]models.Chat, error) {
 	// Получаем чаты по userID
-	chats, err := s.chatRepo.GetChatsByUserID(context.Background(), intUserID)
+	chats, err := s.chatRepo.GetChatsByUserID(context.Background(), userID)
 	if err != nil {
 		return nil, err
 	}

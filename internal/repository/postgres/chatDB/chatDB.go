@@ -13,7 +13,7 @@ import (
 )
 
 type ChatRepository interface {
-	CreateChat(ctx context.Context, chat *models.Chat, participants []int) error
+	CreateChat(ctx context.Context, chat *models.Chat, participants []int) (int, error)
 	GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error)
 	GetChatsByUserID(ctx context.Context, userID int) ([]models.Chat, error)
 	//DeleteChat(ctx context.Context, chatID int) error
@@ -66,12 +66,12 @@ func (r *PostgresChatRepository) GetUserIDsByNicknames(ctx context.Context, nick
 	return userIDs, nil
 }
 
-// CreateChat создает новый чат и добавляет участников
-func (r *PostgresChatRepository) CreateChat(ctx context.Context, chat *models.Chat, participants []int) error {
+// CreateChat создает новый чат и добавляет участников, возвращает ID созданного чата
+func (r *PostgresChatRepository) CreateChat(ctx context.Context, chat *models.Chat, participants []int) (int, error) {
 	tx, err := r.DB.Begin(ctx)
 	if err != nil {
 		log.Printf("Error starting transaction: %v", err)
-		return err
+		return 0, err
 	}
 	defer func() {
 		if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
@@ -83,7 +83,7 @@ func (r *PostgresChatRepository) CreateChat(ctx context.Context, chat *models.Ch
 	err = tx.QueryRow(ctx, "INSERT INTO chats (name, created_at) VALUES ($1, $2) RETURNING id", chat.Name, chat.CreatedAt).Scan(&chatID)
 	if err != nil {
 		log.Printf("Error inserting into chats table: %v", err)
-		return err
+		return 0, err
 	}
 	log.Printf("Chat ID: %d", chatID)
 
@@ -92,16 +92,18 @@ func (r *PostgresChatRepository) CreateChat(ctx context.Context, chat *models.Ch
 		_, err := tx.Exec(ctx, "INSERT INTO chatparticipants (chat_id, user_id, joined_at) VALUES ($1, $2, $3)", chatID, userID, time.Now())
 		if err != nil {
 			log.Printf("Error inserting into chatparticipants: %v", err)
-			return err
+			return 0, err
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		log.Printf("Error committing transaction: %v", err)
-		return err
+		return 0, err
 	}
 	log.Println("Transaction committed successfully")
-	return nil
+
+	// Возвращаем ID созданного чата
+	return chatID, nil
 }
 
 // GetChatsByUserID получает все чаты для конкретного пользователя

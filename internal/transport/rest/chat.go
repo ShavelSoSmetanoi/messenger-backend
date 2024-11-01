@@ -8,7 +8,7 @@ import (
 
 func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 	r.POST("/chats", h.CreateChatHandler)
-	// TODO r.GET("/chats", ...)
+	r.GET("/chats", h.GetChatsHandler)
 	// TODO r.DELETE("/chats/:chat_id",...)
 }
 
@@ -50,4 +50,33 @@ func (h *Handler) CreateChatHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"chat": chat})
+}
+
+func (h *Handler) GetChatsHandler(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userIDStr, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	intUserID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error converting user ID"})
+		return
+	}
+
+	// Вызов сервисного слоя для получения чатов
+	chats, err := h.services.Chat.GetChatsByUserID(intUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chats"})
+		return
+	}
+
+	c.JSON(http.StatusOK, chats)
 }
