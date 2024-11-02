@@ -3,11 +3,13 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: ${DB_HOST}
+    container_name: my_postgres_container
+    env_file:
+      - ../.env  # Указываем путь к .env на уровень выше
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
     ports:
       - "5432:5432"
     volumes:
@@ -38,8 +40,8 @@ services:
 
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..  # Указываем на уровень выше для контекста сборки
+      dockerfile: deployments/Dockerfile  # Убедитесь, что этот файл существует в папке deployments
     container_name: msg-backend
     expose:
       - "8080"

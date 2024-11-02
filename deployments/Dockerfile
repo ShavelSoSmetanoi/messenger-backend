@@ -4,14 +4,14 @@ FROM golang:1.22 AS builder
 WORKDIR /msg-bakend
 
 # Копируем go.mod и go.sum
-COPY go.mod go.sum ./
+COPY ../go.mod ../go.sum ./
 RUN go mod download
 
 # Копируем весь проект
-COPY . .
+COPY .. .
 
 # Собираем Go-приложение
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main ./cmd/app/main.go
 
 # Финальный этап
 FROM alpine:latest
@@ -19,7 +19,8 @@ FROM alpine:latest
 WORKDIR /root
 
 # Копируем .env файл
-COPY .env .env
+COPY ../.env .env
+
 # Копируем исполняемый файл из сборочного контейнера
 COPY --from=builder /msg-bakend/main .
 
