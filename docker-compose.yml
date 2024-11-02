@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: my_postgres_container
+    container_name: ${DB_HOST}
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -35,20 +35,6 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - app-network
-
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
-#    container_name: elasticsearch
-#    environment:
-#      - discovery.type=single-node
-#      - ES_JAVA_OPTS=-Xms512m -Xmx512m  # Установка ограничений по памяти для Elasticsearch
-#    ports:
-#      - "9200:9200"  # API Elasticsearch
-#      - "9300:9300"  # Порт для кластерных соединений
-#    networks:
-#      - app-network
-#    volumes:
-#      - es_data:/usr/share/elasticsearch/data
 
   app:
     build:
