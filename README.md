@@ -23,7 +23,7 @@ go mod tidy
 Проект использует Docker Compose для работы с необходимыми сервисами, такими как база данных. Чтобы поднять все сервисы, выполните:
 
 ```bash
-docker-compose up -d
+docker-compose -f deployments/docker-compose.yml up -d
 ```
 
 ### 4. Установка Goose для управления миграциями
