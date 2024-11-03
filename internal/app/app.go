@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/config"
 	services2 "github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
-	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/rest"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport"
 	"log"
 )
 
@@ -14,7 +14,7 @@ func Run() {
 	services := services2.InitServices()
 
 	// Создание роутера и инициализация обработчиков
-	handler := rest.NewHandler(services)
+	handler := transport.NewHandler(services)
 	router := handler.Init()
 
 	if err := router.Run(":8080"); err != nil {

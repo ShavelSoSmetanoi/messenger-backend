@@ -1,6 +1,140 @@
 {
-  "name": "swagger",
-  "version": "1.0.0",
-  "dependencies": {
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Messenger API",
+    "description": ""
+  },
+  "host": "localhost:8080",
+  "paths": {
+    "/users/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "description": "Returns user profile data by user ID",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "401": {
+            "description": "User not authorized"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "put": {
+        "summary": "Update user profile",
+        "description": "Updates user profile information",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Failed to update user"
+          }
+        }
+      }
+    },
+    "/users/check/{username}": {
+      "get": {
+        "summary": "Check user by username",
+        "description": "Returns user information if found by username",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "about": {
+          "type": "string"
+        }
+      }
+    },
+    "UserUpdate": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "about": {
+          "type": "string"
+        }
+      }
+    }
   }
 }

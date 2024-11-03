@@ -6,13 +6,13 @@ import (
 	"strconv"
 )
 
-func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
+func (h *transport.Handler) InitMessageRouter(r *gin.RouterGroup) {
 
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
 }
 
-func (h *Handler) SendMessageHandler(c *gin.Context) {
+func (h *transport.Handler) SendMessageHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -45,7 +45,7 @@ func (h *Handler) SendMessageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": message})
 }
 
-func (h *Handler) GetMessagesHandler(c *gin.Context) {
+func (h *transport.Handler) GetMessagesHandler(c *gin.Context) {
 	chatIDStr := c.Param("chat_id")
 	userIDStr, exists := c.Get("userID")
 	if !exists {

@@ -4,12 +4,10 @@ services:
   postgres:
     image: postgres:15
     container_name: my_postgres_container
-    env_file:
-      - ../.env  # Указываем путь к .env на уровень выше
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_NAME}
     ports:
       - "5432:5432"
     volumes:
