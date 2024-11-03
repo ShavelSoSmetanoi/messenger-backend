@@ -1,8 +1,10 @@
 package rest
 
 import (
+	"encoding/json"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/Websocket"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -11,6 +13,11 @@ func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
+}
+
+type MessageNotification struct {
+	ChatID  string `json:"chat_id"`
+	Content string `json:"content"`
 }
 
 func (h *Handler) SendMessageHandler(c *gin.Context) {
@@ -46,7 +53,21 @@ func (h *Handler) SendMessageHandler(c *gin.Context) {
 	// Отправляем сообщение через WebSocket участникам, кроме отправителя
 	for _, participant := range participants {
 		if participant.UserID != userID { // Не уведомлять отправителя
-			Websocket.NotifyUser(participant.UserID, "new_message")
+			// Создаем уведомление о новом сообщении
+			notification := MessageNotification{
+				ChatID:  chatID,          // Используйте ваш chatID
+				Content: message.Content, // Содержимое сообщения
+			}
+
+			// Сериализуем в JSON
+			jsonData, err := json.Marshal(notification)
+			if err != nil {
+				log.Printf("Failed to serialize notification: %v", err)
+				continue
+			}
+
+			// Отправляем JSON уведомление пользователю
+			Websocket.NotifyUser(participant.UserID, string(jsonData))
 		}
 	}
 
