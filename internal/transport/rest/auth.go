@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (h *transport.Handler) InitAuthRouter(r *gin.Engine) {
+func (h *Handler) InitAuthRouter(r *gin.Engine) {
 	// Маршруты для аутентификации и авторизации
 	r.POST("/verify-email", middleware.EmailValidator())
 	r.POST("/register", middleware.VerifyCode(), h.services.User.RegisterUser)
@@ -25,7 +25,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func (h *transport.Handler) HandleLogin(c *gin.Context) {
+func (h *Handler) HandleLogin(c *gin.Context) {
 	var loginRequest LoginRequest
 	if err := c.ShouldBindJSON(&loginRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})

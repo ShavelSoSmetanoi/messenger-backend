@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (h *transport.Handler) InitChatRouter(r *gin.RouterGroup) {
+func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 	r.POST("/chats", h.CreateChatHandler)
 	r.GET("/chats", h.GetChatsHandler)
 	// TODO r.DELETE("/chats/:chat_id",...)
@@ -17,7 +17,7 @@ type CreateChatRequest struct {
 	Participants []string `json:"participants" binding:"required"` // ID
 }
 
-func (h *transport.Handler) CreateChatHandler(c *gin.Context) {
+func (h *Handler) CreateChatHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -52,7 +52,7 @@ func (h *transport.Handler) CreateChatHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chat": chat})
 }
 
-func (h *transport.Handler) GetChatsHandler(c *gin.Context) {
+func (h *Handler) GetChatsHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})

@@ -4,21 +4,24 @@ import (
 	"context"
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatparticipantDB"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/messageDB"
 	"time"
 )
 
 type MessageService struct {
-	messageRepo messageDB.MessageRepository
+	messageRepo         messageDB.MessageRepository
+	chatparticipantRepo chatparticipantDB.ChatParticipantRepository
 }
 
-func NewMessageService(repo messageDB.MessageRepository) *MessageService {
+func NewMessageService(repo messageDB.MessageRepository, repoch chatparticipantDB.ChatParticipantRepository) *MessageService {
 	return &MessageService{
-		messageRepo: repo,
+		messageRepo:         repo,
+		chatparticipantRepo: repoch,
 	}
 }
 
-func (h *MessageService) SendMessage(chatID int, userID string, content string) (*models.Message, error) {
+func (h *MessageService) SendMessage(chatID int, userID string, content string) (*models.Message, []models.ChatParticipant, error) {
 	message := &models.Message{
 		ChatID:    chatID,
 		UserID:    userID,
@@ -27,10 +30,16 @@ func (h *MessageService) SendMessage(chatID int, userID string, content string) 
 	}
 
 	if err := h.messageRepo.CreateMessage(context.Background(), message); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return message, nil
+	// Получение всех участников чата
+	participants, err := h.chatparticipantRepo.GetChatParticipants(context.Background(), chatID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return message, participants, nil
 }
 
 func (h *MessageService) GetMessages(chatID int, userID int) ([]models.Message, error) {

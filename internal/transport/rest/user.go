@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (h *transport.Handler) InitUserRouter(r *gin.RouterGroup) {
+func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
 
 	r.GET("/profile", h.services.User.GetUserProfile)
 
@@ -16,7 +16,7 @@ func (h *transport.Handler) InitUserRouter(r *gin.RouterGroup) {
 	r.GET("/check/:username", h.CheckUserByUsernameHandler)
 }
 
-func (h *transport.Handler) CheckUserByUsernameHandler(c *gin.Context) {
+func (h *Handler) CheckUserByUsernameHandler(c *gin.Context) {
 	username := c.Param("username")
 
 	user, err := h.services.User.CheckUserByUsername(username) // Вызов метода бизнес-логики

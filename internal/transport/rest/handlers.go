@@ -1,8 +1,9 @@
-package transport
+package rest
 
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/services"
 	middleware "github.com/ShavelSoSmetanoi/messenger-backend/internal/services/middelfare"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/Websocket"
 	"github.com/gin-gonic/gin"
 	"os"
 )
@@ -25,13 +26,14 @@ func (h *Handler) Init() *gin.Engine {
 		h.InitAuthRouter(r)
 	}
 
-	// TODO - сделать защищеные маршруты
 	authUsers := r.Group("/")
 	authUsers.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET")))
 
 	h.InitUserRouter(authUsers)
 	h.InitChatRouter(authUsers)
 	h.InitMessageRouter(authUsers)
+
+	authUsers.GET("/ws", Websocket.WebSocketHandler)
 
 	return r
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatDB"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatparticipantDB"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/jwtDB"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/messageDB"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/userDB"
@@ -33,7 +34,8 @@ func InitServices() *Services {
 	chs := chat.NewChatService(ch)
 
 	ms := messageDB.NewPostgresMessageRepository(postgres.Db)
-	mss := message.NewMessageService(ms)
+	ckl := chatparticipantDB.NewPostgresChatParticipantRepository(postgres.Db)
+	mss := message.NewMessageService(ms, ckl)
 
 	return &Services{
 		User:    us,

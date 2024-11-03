@@ -1,18 +1,19 @@
 package rest
 
 import (
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/Websocket"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 )
 
-func (h *transport.Handler) InitMessageRouter(r *gin.RouterGroup) {
+func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
 }
 
-func (h *transport.Handler) SendMessageHandler(c *gin.Context) {
+func (h *Handler) SendMessageHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -35,17 +36,24 @@ func (h *transport.Handler) SendMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Используем сервис для отправки сообщения
-	message, err := h.services.Message.SendMessage(chatIDInt, userID.(string), request.Content)
+	// Используем сервис для отправки сообщения и получения участников
+	message, participants, err := h.services.Message.SendMessage(chatIDInt, userID.(string), request.Content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})
 		return
 	}
 
+	// Отправляем сообщение через WebSocket участникам, кроме отправителя
+	for _, participant := range participants {
+		if participant.UserID != userID { // Не уведомлять отправителя
+			Websocket.NotifyUser(participant.UserID, "new_message")
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": message})
 }
 
-func (h *transport.Handler) GetMessagesHandler(c *gin.Context) {
+func (h *Handler) GetMessagesHandler(c *gin.Context) {
 	chatIDStr := c.Param("chat_id")
 	userIDStr, exists := c.Get("userID")
 	if !exists {
