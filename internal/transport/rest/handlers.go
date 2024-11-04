@@ -26,14 +26,14 @@ func (h *Handler) Init() *gin.Engine {
 		h.InitAuthRouter(r)
 	}
 
+	r.GET("/ws", Websocket.WebSocketHandler)
+
 	authUsers := r.Group("/")
 	authUsers.Use(middleware.AuthMiddleware(os.Getenv("JWT_SECRET")))
 
 	h.InitUserRouter(authUsers)
 	h.InitChatRouter(authUsers)
 	h.InitMessageRouter(authUsers)
-
-	authUsers.GET("/ws", Websocket.WebSocketHandler)
 
 	return r
 }
