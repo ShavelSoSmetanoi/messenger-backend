@@ -15,11 +15,6 @@ func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
 }
 
-type MessageNotification struct {
-	ChatID  string `json:"chat_id"`
-	Content string `json:"content"`
-}
-
 func (h *Handler) SendMessageHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -53,14 +48,8 @@ func (h *Handler) SendMessageHandler(c *gin.Context) {
 	// Отправляем сообщение через WebSocket участникам, кроме отправителя
 	for _, participant := range participants {
 		if participant.UserID != userID { // Не уведомлять отправителя
-			// Создаем уведомление о новом сообщении
-			notification := MessageNotification{
-				ChatID:  chatID,          // Используйте ваш chatID
-				Content: message.Content, // Содержимое сообщения
-			}
-
 			// Сериализуем в JSON
-			jsonData, err := json.Marshal(notification)
+			jsonData, err := json.Marshal(message)
 			if err != nil {
 				log.Printf("Failed to serialize notification: %v", err)
 				continue
