@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserServiceInterface interface {
+type ServiceInterface interface {
 	GetUserProfile(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
 	CheckUserByUsername(username string) (*models.User, error)

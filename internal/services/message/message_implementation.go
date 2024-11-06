@@ -9,19 +9,19 @@ import (
 	"time"
 )
 
-type MessageService struct {
+type Service struct {
 	messageRepo         messageDB.MessageRepository
 	chatparticipantRepo chatparticipantDB.ChatParticipantRepository
 }
 
-func NewMessageService(repo messageDB.MessageRepository, repoch chatparticipantDB.ChatParticipantRepository) *MessageService {
-	return &MessageService{
+func NewMessageService(repo messageDB.MessageRepository, repoch chatparticipantDB.ChatParticipantRepository) *Service {
+	return &Service{
 		messageRepo:         repo,
 		chatparticipantRepo: repoch,
 	}
 }
 
-func (h *MessageService) SendMessage(chatID int, userID string, content string) (*models.Message, []models.ChatParticipant, error) {
+func (h *Service) SendMessage(chatID int, userID string, content string) (*models.Message, []models.ChatParticipant, error) {
 	message := &models.Message{
 		ChatID:    chatID,
 		UserID:    userID,
@@ -42,7 +42,7 @@ func (h *MessageService) SendMessage(chatID int, userID string, content string) 
 	return message, participants, nil
 }
 
-func (h *MessageService) GetMessages(chatID int, userID int) ([]models.Message, error) {
+func (h *Service) GetMessages(chatID int, userID int) ([]models.Message, error) {
 	// Проверка, является ли пользователь участником чата
 	isInChat, err := h.messageRepo.IsUserInChat(context.Background(), chatID, userID)
 	if err != nil {

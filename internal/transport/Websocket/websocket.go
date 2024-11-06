@@ -18,7 +18,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func WebSocketHandler(c *gin.Context) {
+func Handler(c *gin.Context) {
 	// Извлекаем JWT токен из URL параметра
 	tokenString := c.Query("token")
 	if tokenString == "" {

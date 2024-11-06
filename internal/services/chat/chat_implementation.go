@@ -9,18 +9,18 @@ import (
 	"time"
 )
 
-type ChatService struct {
+type Service struct {
 	chatRepo chatDB.ChatRepository
 }
 
-func NewChatService(repo chatDB.ChatRepository) *ChatService {
-	return &ChatService{
+func NewChatService(repo chatDB.ChatRepository) *Service {
+	return &Service{
 		chatRepo: repo,
 	}
 }
 
 // CreateChat создает новый чат
-func (s *ChatService) CreateChat(userID int, name string, participants []string) (*models.Chat, error) {
+func (s *Service) CreateChat(userID int, name string, participants []string) (*models.Chat, error) {
 	// Преобразование слайса string в слайс int
 	participantsIDs := make([]int, len(participants))
 	for i, p := range participants {
@@ -51,7 +51,7 @@ func (s *ChatService) CreateChat(userID int, name string, participants []string)
 }
 
 // GetChatsByUserID возвращает все чаты пользователя по его ID
-func (s *ChatService) GetChatsByUserID(userID int) ([]models.Chat, error) {
+func (s *Service) GetChatsByUserID(userID int) ([]models.Chat, error) {
 	// Получаем чаты по userID
 	chats, err := s.chatRepo.GetChatsByUserID(context.Background(), userID)
 	if err != nil {
@@ -61,6 +61,6 @@ func (s *ChatService) GetChatsByUserID(userID int) ([]models.Chat, error) {
 }
 
 // DeleteChat удаляет чат по его ID
-func (s *ChatService) DeleteChat(chatID int) error {
+func (s *Service) DeleteChat(chatID int) error {
 	return s.chatRepo.DeleteChat(context.Background(), chatID)
 }

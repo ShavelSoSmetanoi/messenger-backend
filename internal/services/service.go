@@ -14,10 +14,10 @@ import (
 )
 
 type Services struct {
-	User    user.UserServiceInterface
+	User    user.ServiceInterface
 	Auth    auth.AuthHandlerInterface
-	Chat    chat.ChatServiceInterface
-	Message message.MessageServiceInterface
+	Chat    chat.ServiceInterface
+	Message message.ServiceInterface
 }
 
 // InitServices инициализирует все сервисы и возвращает контейнер зависимостей

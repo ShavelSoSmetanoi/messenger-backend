@@ -12,18 +12,18 @@ import (
 	"net/http"
 )
 
-type UserService struct {
+type Service struct {
 	userRepo userDB.UserRepository
 }
 
-func NewUserService(repo userDB.UserRepository) *UserService {
-	return &UserService{
+func NewUserService(repo userDB.UserRepository) *Service {
+	return &Service{
 		userRepo: repo,
 	}
 }
 
 // GetUserByID - метод для получения пользователя по ID
-func (h *UserService) GetUserByID(userID string) (*models.User, error) {
+func (h *Service) GetUserByID(userID string) (*models.User, error) {
 	// Используем репозиторий для получения данных о пользователе
 	user, err := h.userRepo.GetUserByID(context.Background(), userID)
 	if err != nil {
@@ -38,7 +38,7 @@ func (h *UserService) GetUserByID(userID string) (*models.User, error) {
 }
 
 // RegisterUser регистрирует нового пользователя
-func (h *UserService) RegisterUser(c *gin.Context) {
+func (h *Service) RegisterUser(c *gin.Context) {
 	// Получаем данные из контекста
 	userData, exists := c.Get("userData")
 	if !exists {
@@ -66,7 +66,7 @@ func (h *UserService) RegisterUser(c *gin.Context) {
 }
 
 // GetUserProfile возвращает профиль пользователя по его ID
-func (h *UserService) GetUserProfile(c *gin.Context) {
+func (h *Service) GetUserProfile(c *gin.Context) {
 	// Получаем userID из контекста (например, после авторизации)
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -98,7 +98,7 @@ func (h *UserService) GetUserProfile(c *gin.Context) {
 }
 
 // UpdateUserProfile обновляет профиль пользователя
-func (h *UserService) UpdateUserProfile(c *gin.Context) {
+func (h *Service) UpdateUserProfile(c *gin.Context) {
 	userID := c.Param("user_id")
 	var userUpdate models.UserUpdate
 
@@ -118,7 +118,7 @@ func (h *UserService) UpdateUserProfile(c *gin.Context) {
 }
 
 // CheckUserByUsername проверяет наличие пользователя по имени
-func (h *UserService) CheckUserByUsername(username string) (*models.User, error) {
+func (h *Service) CheckUserByUsername(username string) (*models.User, error) {
 	user, err := h.userRepo.GetUserByUsername(context.Background(), username)
 
 	if err != nil {
