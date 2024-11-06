@@ -11,9 +11,13 @@ import (
 )
 
 func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
-
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
+
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
+
+	r.PUT("/chats/:chat_id/messages/:message_id", h.UpdateMessageHandler)
+
+	r.DELETE("/chats/:chat_id/messages/:message_id", h.DeleteMessageHandler)
 }
 
 type SendMessageResponse struct {
@@ -106,4 +110,18 @@ func (h *Handler) GetMessagesHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"messages": messages})
+}
+
+// UpdateMessageHandler обновляет содержимое сообщения
+func (h *Handler) UpdateMessageHandler(c *gin.Context) {
+	// Логика для обновления сообщения
+
+	c.JSON(http.StatusNotFound, "еще ничего нет")
+}
+
+// DeleteMessageHandler удаляет сообщение
+func (h *Handler) DeleteMessageHandler(c *gin.Context) {
+	// Логика для удаления сообщения
+
+	c.JSON(http.StatusNotFound, "еще ничего нет")
 }
