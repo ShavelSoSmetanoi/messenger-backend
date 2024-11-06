@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/Websocket"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -13,6 +14,11 @@ func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
+}
+
+type SendMessageResponse struct {
+	Status  string         `json:"status"`
+	Message models.Message `json:"message"`
 }
 
 func (h *Handler) SendMessageHandler(c *gin.Context) {
@@ -49,7 +55,12 @@ func (h *Handler) SendMessageHandler(c *gin.Context) {
 	for _, participant := range participants {
 		if participant.UserID != userID { // Не уведомлять отправителя
 			// Сериализуем в JSON
-			jsonData, err := json.Marshal(message)
+
+			sendMessage := SendMessageResponse{
+				Status:  "send",
+				Message: *message,
+			}
+			jsonData, err := json.Marshal(sendMessage)
 			if err != nil {
 				log.Printf("Failed to serialize notification: %v", err)
 				continue
