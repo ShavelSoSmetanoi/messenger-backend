@@ -116,7 +116,7 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string)
 func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
 	// Выполнение запроса на обновление данных пользователя
 	query := `UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4`
-	_, err := r.DB.Exec(ctx, query, userUpdate.Email, userUpdate.About, userUpdate.Photo, userID)
+	_, err := r.DB.Exec(ctx, query, userUpdate.About, userUpdate.Photo, userID)
 
 	if err != nil {
 		log.Printf("Error updating user with ID %s: %v", userID, err)
