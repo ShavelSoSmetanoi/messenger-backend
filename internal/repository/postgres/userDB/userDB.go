@@ -29,7 +29,8 @@ func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
 	return &PostgresUserRepository{DB: db}
 }
 
-// Создание пользователя
+// CreateUser creates a new user with the provided details, hashes the password,
+// generates a unique ID, and inserts the user into the database.
 func (r *PostgresUserRepository) CreateUser(username, email, password, about string, photo []byte) error {
 	// Хэширование пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -56,7 +57,7 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 	return nil
 }
 
-// Проверка аунтификакации пользователя
+// AuthenticateUser verifies the provided credentials for a user with the given username.
 func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
 	var user models.User
 
@@ -89,7 +90,7 @@ func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username,
 	return &user, nil
 }
 
-// Получение пользователя по ID
+// GetUserByID retrieves a user's details by their ID. Returns an error if the user is not found.
 func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
 	var user models.User
 
@@ -112,7 +113,8 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string)
 	return &user, nil
 }
 
-// Обновление пользователя
+// UpdateUser updates the specified fields of a user in the database using the provided userID and update data.
+// Returns an error if the update fails.
 func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
 	// Выполнение запроса на обновление данных пользователя
 	query := `UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4`
@@ -128,7 +130,7 @@ func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, 
 	return nil
 }
 
-// Получение пользователя по имени пользователя
+// GetUserByUsername retrieves a user by their username. Returns nil if the user does not exist.
 func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
 
