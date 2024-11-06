@@ -3,7 +3,8 @@ package models
 import "time"
 
 type Message struct {
-	ID        int       `json:"id"`
+	ID int `json:"id"`
+	// Type [text, file]
 	ChatID    int       `json:"chat_id"`
 	UserID    string    `json:"user_id"`
 	Content   string    `json:"content"`

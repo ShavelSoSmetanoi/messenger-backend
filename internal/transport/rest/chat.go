@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -9,7 +11,7 @@ import (
 func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 	r.POST("/chats", h.CreateChatHandler)
 	r.GET("/chats", h.GetChatsHandler)
-	// TODO r.DELETE("/chats/:chat_id",...)
+	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)
 }
 
 type CreateChatRequest struct {
@@ -79,4 +81,32 @@ func (h *Handler) GetChatsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, chats)
+}
+
+func (h *Handler) DeleteChatHandler(c *gin.Context) {
+	// Получаем chat_id из параметров маршрута
+	chatIDStr := c.Param("chat_id")
+
+	// Преобразуем chatID в int
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		// Если ошибка преобразования, возвращаем ошибку
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
+		return
+	}
+
+	// Вызов метода бизнес-логики для удаления чата
+	err = h.services.Chat.DeleteChat(chatID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Chat not found"})
+			return
+		}
+		log.Printf("Error deleting chat by ID: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	// Успешный ответ при удалении
+	c.JSON(http.StatusOK, gin.H{"message": "Chat successfully deleted"})
 }

@@ -11,7 +11,6 @@ type User struct {
 }
 
 type UserUpdate struct {
-	Email string `json:"email"` // - delete
 	About string `json:"about"`
 	Photo []byte `json:"photo"`
 }

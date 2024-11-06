@@ -16,7 +16,7 @@ type ChatRepository interface {
 	CreateChat(ctx context.Context, chat *models.Chat, participants []int) (int, error)
 	GetUserIDsByNicknames(ctx context.Context, nicknames []string) ([]int, error)
 	GetChatsByUserID(ctx context.Context, userID int) ([]models.Chat, error)
-	//DeleteChat(ctx context.Context, chatID int) error
+	DeleteChat(ctx context.Context, chatID int) error
 }
 
 type PostgresChatRepository struct {
@@ -133,6 +133,48 @@ func (r *PostgresChatRepository) GetChatsByUserID(ctx context.Context, userID in
 	return chats, nil
 }
 
-//func (r *PostgresChatRepository) DeleteChat(ctx context.Context, chatID int) {
-//
-//}
+func (r *PostgresChatRepository) DeleteChat(ctx context.Context, chatID int) error {
+	// Начинаем транзакцию
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		log.Printf("Error starting transaction: %v", err)
+		return err
+	}
+
+	// Обеспечиваем откат транзакции в случае ошибки
+	defer func() {
+		if err := tx.Rollback(ctx); err != nil && err != pgx.ErrTxClosed {
+			log.Printf("Error rolling back transaction: %v", err)
+		}
+	}()
+
+	// Удаляем все сообщения чата
+	_, err = tx.Exec(ctx, "DELETE FROM messages WHERE chat_id = $1", chatID)
+	if err != nil {
+		log.Printf("Error deleting messages for chat %d: %v", chatID, err)
+		return err
+	}
+
+	// Удаляем участников чата
+	_, err = tx.Exec(ctx, "DELETE FROM chatparticipants WHERE chat_id = $1", chatID)
+	if err != nil {
+		log.Printf("Error deleting participants for chat %d: %v", chatID, err)
+		return err
+	}
+
+	// Удаляем сам чат
+	_, err = tx.Exec(ctx, "DELETE FROM chats WHERE id = $1", chatID)
+	if err != nil {
+		log.Printf("Error deleting chat %d: %v", chatID, err)
+		return err
+	}
+
+	// Коммитим транзакцию, если все операции прошли успешно
+	if err := tx.Commit(ctx); err != nil {
+		log.Printf("Error committing transaction: %v", err)
+		return err
+	}
+
+	log.Printf("Chat %d and associated data deleted successfully", chatID)
+	return nil
+}

@@ -61,7 +61,6 @@ func (s *ChatService) GetChatsByUserID(userID int) ([]models.Chat, error) {
 }
 
 // DeleteChat удаляет чат по его ID
-func (s *ChatService) DeleteChat(chatID string) error {
-
-	return nil
+func (s *ChatService) DeleteChat(chatID int) error {
+	return s.chatRepo.DeleteChat(context.Background(), chatID)
 }
