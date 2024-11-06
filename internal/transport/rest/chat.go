@@ -136,4 +136,6 @@ func (h *Handler) GetLastMessageHandler(c *gin.Context) {
 	//	"chat_id":      chatID,
 	//	"last_message": lastMessage,
 	//})
+
+	c.JSON(http.StatusNotFound, "Еще нихрена нет!")
 }
