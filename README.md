@@ -11,7 +11,30 @@ git clone https://github.com/ShavelSoSmetanoi/messenger-backend.git
 cd messenger-backend
 ```
 
-### 2. Установка зависимостей
+### 2. Создание файлов .env
+Для корректной работы приложения вам нужно создать файл .env как в корне проекта, так и в папке deployments, содержащий необходимые настройки для работы с базой данных и JWT.
+
+Шаг 1: В корне проекта создайте файл .env со следующим содержимым:
+
+```bash
+JWT_SECRET=your_jwt_secret_here
+DB_USER=myuser
+DB_PASSWORD=mypassword
+DB_NAME=mydatabase
+DB_HOST=my_postgres_container 
+DB_PORT=5432
+```
+Замените your_jwt_secret_here на ваш секретный ключ для JWT, а также параметры подключения к базе данных (если они отличаются от значений по умолчанию).
+
+Шаг 2: В папке deployments создайте файл .env:
+
+```bash
+PG_USER=myuser
+PG_PASSWORD=mypassword
+PG_NAME=mydatabase
+```
+
+### 3. Установка зависимостей
 
 Проект написан на Go и использует модули для управления зависимостями. Чтобы установить все зависимости, выполните:
 
@@ -19,14 +42,14 @@ cd messenger-backend
 go mod tidy
 ```
 
-### 3. Поднятие Docker Compose
+### 4. Поднятие Docker Compose
 Проект использует Docker Compose для работы с необходимыми сервисами, такими как база данных. Чтобы поднять все сервисы, выполните:
 
 ```bash
 docker-compose -f deployments/docker-compose.yml up -d
 ```
 
-### 4. Установка Goose для управления миграциями
+### 5. Установка Goose для управления миграциями
 Для управления миграциями используется утилита Goose. Установите её, выполнив следующую команду:
 
 ```bash
