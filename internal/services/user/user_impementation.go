@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/userDB"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,21 @@ func NewUserService(repo userDB.UserRepository) *UserService {
 	return &UserService{
 		userRepo: repo,
 	}
+}
+
+// GetUserByID - метод для получения пользователя по ID
+func (h *UserService) GetUserByID(userID string) (*models.User, error) {
+	// Используем репозиторий для получения данных о пользователе
+	user, err := h.userRepo.GetUserByID(context.Background(), userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("user not found")
+		}
+		log.Printf("Error fetching user by ID: %v", err)
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // RegisterUser регистрирует нового пользователя
