@@ -33,7 +33,6 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 }
 
 // DownloadFileHandler handles file download by ID
-// DownloadFileHandler handles file download by ID
 func (h *Handler) DownloadFileHandler(c *gin.Context) {
 	fileID := c.Param("file_id")
 
