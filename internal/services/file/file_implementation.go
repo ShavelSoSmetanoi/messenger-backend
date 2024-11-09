@@ -2,17 +2,19 @@ package file
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/minio/minio-go/v7"
+	"log"
 	"mime/multipart"
 )
 
+// S3FileService provides file management functionality for S3
 type S3FileService struct {
-	client *s3.Client
+	client *minio.Client
 	bucket string
 }
 
-func NewS3FileService(client *s3.Client, bucket string) *S3FileService {
+// NewS3FileService creates a new instance of S3FileService
+func NewS3FileService(client *minio.Client, bucket string) *S3FileService {
 	return &S3FileService{client: client, bucket: bucket}
 }
 
@@ -27,12 +29,12 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 	// Generate a unique file ID or key (could use UUID or filename)
 	fileKey := fileHeader.Filename
 
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(fileKey),
-		Body:   file,
+	// Upload file to S3
+	_, err = s.client.PutObject(ctx, s.bucket, fileKey, file, fileHeader.Size, minio.PutObjectOptions{
+		ContentType: "application/octet-stream", // Default content type
 	})
 	if err != nil {
+		log.Printf("Error uploading file to S3: %v", err)
 		return "", err
 	}
 
@@ -41,44 +43,50 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 
 // DownloadFile retrieves a file from S3
 func (s *S3FileService) DownloadFile(ctx context.Context, fileID string) (*File, error) {
-	resp, err := s.client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(fileID),
-	})
+	// Get file metadata
+	fileInfo, err := s.client.StatObject(ctx, s.bucket, fileID, minio.StatObjectOptions{})
 	if err != nil {
+		log.Printf("Error retrieving file metadata: %v", err)
 		return nil, err
 	}
 
+	// Retrieve the file itself
+	resp, err := s.client.GetObject(ctx, s.bucket, fileID, minio.GetObjectOptions{})
+	if err != nil {
+		log.Printf("Error retrieving file from S3: %v", err)
+		return nil, err
+	}
+	defer resp.Close()
+
 	return &File{
 		Path:     fileID,
-		Content:  resp.Body,
-		FileType: *resp.ContentType,
+		Content:  resp,                 // This is the file content
+		FileType: fileInfo.ContentType, // Get content type from metadata
 	}, nil
 }
 
 // DeleteFile removes a file from S3
 func (s *S3FileService) DeleteFile(ctx context.Context, fileID string) error {
-	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(fileID),
-	})
+	err := s.client.RemoveObject(ctx, s.bucket, fileID, minio.RemoveObjectOptions{})
+	if err != nil {
+		log.Printf("Error deleting file from S3: %v", err)
+	}
 	return err
 }
 
 // GetFileInfo retrieves metadata for a file stored in S3
 func (s *S3FileService) GetFileInfo(ctx context.Context, fileID string) (*FileInfo, error) {
-	head, err := s.client.HeadObject(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(fileID),
-	})
+	// Get object metadata
+	head, err := s.client.StatObject(ctx, s.bucket, fileID, minio.StatObjectOptions{})
 	if err != nil {
+		log.Printf("Error retrieving file metadata: %v", err)
 		return nil, err
 	}
 
 	return &FileInfo{
 		ID:       fileID,
 		Name:     fileID, // Or retrieve original name if stored separately
-		Size:     *head.ContentLength,
-		Uploaded: *head.LastModified,
+		Size:     head.Size,
+		Uploaded: head.LastModified,
 	}, nil
 }

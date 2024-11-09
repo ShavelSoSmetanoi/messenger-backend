@@ -1,18 +1,15 @@
 package s3
 
 import (
-	"context"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/joho/godotenv"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
 	"os"
 )
 
 type Client struct {
-	Client *s3.Client
+	Client *minio.Client
 	Bucket string
 }
 
@@ -23,32 +20,22 @@ func NewS3Client(bucketName string) (*Client, error) {
 		log.Printf("Error loading .env file: %v", err)
 	}
 
-	// Создаем конфигурацию SDK
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(os.Getenv("YANDEX_S3_REGION")),
-		config.WithCredentialsProvider(
-			aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
-				os.Getenv("YANDEX_S3_ACCESS_KEY"),
-				os.Getenv("YANDEX_S3_SECRET_KEY"),
-				"",
-			)),
-		),
-		// Устанавливаем endpoint для Yandex Object Storage
-		config.WithEndpointResolver(aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				URL:           os.Getenv("YANDEX_S3_ENDPOINT"), // Например: "https://storage.yandexcloud.net"
-				SigningRegion: region,
-			}, nil
-		})),
+	// Инициализируем MinIO клиент с настройками для Yandex Object Storage
+	minioClient, err := minio.New(
+		os.Getenv("YANDEX_S3_ENDPOINT"), // Указываем endpoint для Yandex Object Storage
+		&minio.Options{
+			Creds:  credentials.NewStaticV4(os.Getenv("YANDEX_S3_ACCESS_KEY"), os.Getenv("YANDEX_S3_SECRET_KEY"), ""),
+			Secure: true,
+		},
 	)
 	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
+		log.Fatalf("Unable to initialize MinIO client: %v", err)
 		return nil, err
 	}
 
-	// Инициализируем S3 клиент
+	// Создаем клиент для работы с S3
 	return &Client{
-		Client: s3.NewFromConfig(cfg),
+		Client: minioClient,
 		Bucket: bucketName,
 	}, nil
 }

@@ -28,4 +28,5 @@ type FileInfo struct {
 	Name     string
 	Size     int64
 	Uploaded time.Time
+	FileType string
 }
