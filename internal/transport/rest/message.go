@@ -15,6 +15,8 @@ func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 
 	r.GET("/chats/:chat_id/messages", h.GetMessagesHandler)
 
+	r.GET("/chats/:chat_id/messages/last", h.GetLastMessageHandler)
+
 	r.PUT("/chats/:chat_id/messages/:message_id", h.UpdateMessageHandler)
 
 	r.DELETE("/chats/:chat_id/messages/:message_id", h.DeleteMessageHandler)
@@ -23,6 +25,19 @@ func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 type SendMessageResponse struct {
 	Status  string         `json:"status"`
 	Message models.Message `json:"message"`
+}
+
+type UpdateMessageResponse struct {
+	Status    string `json:"status"`
+	ChatID    int    `json:"chat_id"`
+	MessageID int    `json:"message_id"`
+	Content   string `json:"content"`
+}
+
+type DeleteMessageResponse struct {
+	Status    string `json:"status"`
+	ChatID    int    `json:"chat_id"`
+	MessageID int    `json:"message_id"`
 }
 
 func (h *Handler) SendMessageHandler(c *gin.Context) {
@@ -49,7 +64,7 @@ func (h *Handler) SendMessageHandler(c *gin.Context) {
 	}
 
 	// Используем сервис для отправки сообщения и получения участников
-	message, participants, err := h.services.Message.SendMessage(chatIDInt, userID.(string), request.Content)
+	message, participants, err := h.services.Message.SendMessage(chatIDInt, userID.(string), request.Content, "text")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})
 		return
@@ -98,6 +113,7 @@ func (h *Handler) GetMessagesHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+
 	// Используем сервис для получения сообщений
 	messages, err := h.services.Message.GetMessages(chatID, userID)
 	if err != nil {
@@ -114,14 +130,160 @@ func (h *Handler) GetMessagesHandler(c *gin.Context) {
 
 // UpdateMessageHandler обновляет содержимое сообщения
 func (h *Handler) UpdateMessageHandler(c *gin.Context) {
-	// Логика для обновления сообщения
+	// Получаем userID из контекста и проверяем тип
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-	c.JSON(http.StatusNotFound, "еще ничего нет")
+	// Преобразуем userID к int, если он сохранен как строка
+	var userIDInt int
+	switch id := userID.(type) {
+	case int:
+		userIDInt = id
+	case string:
+		// Попытка преобразовать userID из строки в int
+		var err error
+		userIDInt, err = strconv.Atoi(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+			return
+		}
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
+	// Извлекаем параметры из URL
+	messageIDStr := c.Param("message_id")
+	chatIDStr := c.Param("chat_id")
+
+	// Конвертация параметров в int
+	messageID, err := strconv.Atoi(messageIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
+		return
+	}
+
+	// Извлекаем новое содержимое из JSON
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	// Вызов сервиса для обновления сообщения
+	participants, err := h.services.Message.UpdateMessage(chatID, userIDInt, messageID, req.Content)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Отправляем сообщение через WebSocket участникам, кроме отправителя
+	for _, participant := range participants {
+		if participant.UserID != userIDInt { // Не уведомлять отправителя
+			// Сериализуем в JSON
+			response := UpdateMessageResponse{
+				Status:    "update",
+				ChatID:    chatID,
+				MessageID: messageID,
+				Content:   req.Content,
+			}
+			jsonData, err := json.Marshal(response)
+			if err != nil {
+				log.Printf("Failed to serialize notification: %v", err)
+				continue
+			}
+
+			// Отправляем JSON уведомление пользователю
+			Websocket.NotifyUser(participant.UserID, string(jsonData))
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Message updated successfully"})
 }
 
 // DeleteMessageHandler удаляет сообщение
 func (h *Handler) DeleteMessageHandler(c *gin.Context) {
-	// Логика для удаления сообщения
+	// Получаем userID из контекста и проверяем тип
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-	c.JSON(http.StatusNotFound, "еще ничего нет")
+	// Преобразуем userID к int, если он сохранен как строка
+	var userIDInt int
+	switch id := userID.(type) {
+	case int:
+		userIDInt = id
+	case string:
+		// Попытка преобразовать userID из строки в int
+		var err error
+		userIDInt, err = strconv.Atoi(id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+			return
+		}
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
+	// Извлекаем параметры из URL
+	messageIDStr := c.Param("message_id")
+	chatIDStr := c.Param("chat_id")
+
+	// Конвертация параметров в int
+	messageID, err := strconv.Atoi(messageIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
+		return
+	}
+
+	// Вызов сервиса для удаления сообщения
+	participants, err := h.services.Message.DeleteMessage(chatID, userIDInt, messageID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Отправляем сообщение через WebSocket участникам, кроме отправителя
+	for _, participant := range participants {
+		if participant.UserID != userIDInt { // Не уведомлять отправителя
+			// Сериализуем в JSON
+			response := DeleteMessageResponse{
+				Status:    "delete",
+				ChatID:    chatID,
+				MessageID: messageID,
+			}
+			jsonData, err := json.Marshal(response)
+			if err != nil {
+				log.Printf("Failed to serialize notification: %v", err)
+				continue
+			}
+
+			// Отправляем JSON уведомление пользователю
+			Websocket.NotifyUser(participant.UserID, string(jsonData))
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Message deleted successfully"})
+}
+
+func (h *Handler) GetLastMessageHandler(context *gin.Context) {
+
 }

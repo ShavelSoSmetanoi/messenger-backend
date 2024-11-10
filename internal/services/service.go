@@ -46,7 +46,7 @@ func InitServices() *Services {
 	if err != nil {
 		log.Fatalf("Failed to create S3 client: %v", err)
 	}
-	fileService := file.NewS3FileService(s3Client.Client, s3Client.Bucket)
+	fileService := file.NewS3FileService(s3Client.Client, s3Client.Bucket, ms)
 
 	return &Services{
 		User:    us,

@@ -2,6 +2,8 @@ package file
 
 import (
 	"context"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/messageDB"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"log"
 	"mime/multipart"
@@ -9,16 +11,21 @@ import (
 
 // S3FileService provides file management functionality for S3
 type S3FileService struct {
-	client *minio.Client
-	bucket string
+	messageRepo messageDB.MessageRepository
+	client      *minio.Client
+	bucket      string
 }
 
 // NewS3FileService creates a new instance of S3FileService
-func NewS3FileService(client *minio.Client, bucket string) *S3FileService {
-	return &S3FileService{client: client, bucket: bucket}
+func NewS3FileService(client *minio.Client, bucket string, repo messageDB.MessageRepository) *S3FileService {
+	return &S3FileService{
+		messageRepo: repo,
+		client:      client,
+		bucket:      bucket,
+	}
 }
 
-// UploadFile uploads a file to S3 and returns its ID or key
+// UploadFile uploads a file to S3 and returns its unique ID or key
 func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -26,11 +33,11 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 	}
 	defer file.Close()
 
-	// Generate a unique file ID or key (could use UUID or filename)
-	fileKey := fileHeader.Filename
+	// Generate a unique file ID or key using UUID
+	fileID := uuid.New().String() + "_" + fileHeader.Filename
 
 	// Upload file to S3
-	_, err = s.client.PutObject(ctx, s.bucket, fileKey, file, fileHeader.Size, minio.PutObjectOptions{
+	_, err = s.client.PutObject(ctx, s.bucket, fileID, file, fileHeader.Size, minio.PutObjectOptions{
 		ContentType: "application/octet-stream", // Default content type
 	})
 	if err != nil {
@@ -38,7 +45,7 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 		return "", err
 	}
 
-	return fileKey, nil
+	return fileID, nil
 }
 
 // DownloadFile retrieves a file from S3
@@ -88,5 +95,6 @@ func (s *S3FileService) GetFileInfo(ctx context.Context, fileID string) (*FileIn
 		Name:     fileID, // Or retrieve original name if stored separately
 		Size:     head.Size,
 		Uploaded: head.LastModified,
+		FileType: head.ContentType,
 	}, nil
 }

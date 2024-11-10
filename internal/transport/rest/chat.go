@@ -11,7 +11,6 @@ import (
 func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 	r.POST("/chats", h.CreateChatHandler)
 	r.GET("/chats", h.GetChatsHandler)
-	r.GET("/chat/:chat_id/last_message", h.GetLastMessageHandler)
 	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)
 }
 
@@ -110,32 +109,4 @@ func (h *Handler) DeleteChatHandler(c *gin.Context) {
 
 	// Успешный ответ при удалении
 	c.JSON(http.StatusOK, gin.H{"message": "Chat successfully deleted"})
-}
-
-func (h *Handler) GetLastMessageHandler(c *gin.Context) {
-	//// Получаем chatID из параметров маршрута
-	//chatIDStr := c.Param("chat_id")
-	//chatID, err := strconv.Atoi(chatIDStr)
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
-	//	return
-	//}
-	//
-	//// Вызов метода бизнес-логики для получения последнего сообщения
-	//lastMessage, err := h.services.Chat.GetLastMessageForChat(context.Background(), chatID)
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch last message"})
-	//	return
-	//}
-	//
-	//if lastMessage == "" {
-	//	lastMessage = "No messages yet" // Если сообщений нет, возвращаем соответствующее сообщение
-	//}
-	//
-	//c.JSON(http.StatusOK, gin.H{
-	//	"chat_id":      chatID,
-	//	"last_message": lastMessage,
-	//})
-
-	c.JSON(http.StatusNotFound, "Еще нихрена нет!")
 }
