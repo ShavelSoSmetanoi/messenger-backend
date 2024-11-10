@@ -145,3 +145,9 @@ func (h *Service) GetMessages(chatID int, userID int) ([]models.Message, error) 
 
 	return messages, nil
 }
+
+// GetLastMessage возврвщает последнее сообщение чата
+func (h *Service) GetLastMessage(chatID int) (*models.Message, error) {
+	// Вызов репозитория для получения последнего сообщения
+	return h.messageRepo.GetLastMessage(context.Background(), chatID)
+}

@@ -7,4 +7,5 @@ type ServiceInterface interface {
 	GetMessages(chatID int, userID int) ([]models.Message, error)
 	UpdateMessage(chatID int, userID int, messageID int, content string) ([]models.ChatParticipant, error)
 	DeleteMessage(chatID int, userID int, messageID int) ([]models.ChatParticipant, error)
+	GetLastMessage(chatID int) (*models.Message, error)
 }

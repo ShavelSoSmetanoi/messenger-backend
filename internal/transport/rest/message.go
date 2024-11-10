@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/transport/Websocket"
@@ -284,6 +285,33 @@ func (h *Handler) DeleteMessageHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Message deleted successfully"})
 }
 
-func (h *Handler) GetLastMessageHandler(context *gin.Context) {
+func (h *Handler) GetLastMessageHandler(c *gin.Context) {
+	// Извлекаем chatID из параметров URL
+	chatIDStr := c.Param("chat_id")
+	chatID, err := strconv.Atoi(chatIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
+		return
+	}
 
+	// Получаем последнее сообщение из репозитория
+	message, err := h.services.Message.GetLastMessage(chatID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No messages found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
+	// Возвращаем сообщение в ответе
+	c.JSON(http.StatusOK, gin.H{
+		"message_id": message.ID,
+		"chat_id":    message.ChatID,
+		"user_id":    message.UserID,
+		"content":    message.Content,
+		"type":       message.Type,
+		"created_at": message.CreatedAt,
+	})
 }

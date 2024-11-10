@@ -13,6 +13,7 @@ type MessageRepository interface {
 	GetMessagesByChatID(ctx context.Context, chatID int) ([]models.Message, error)
 	UpdateMessageContent(ctx context.Context, messageID int, content string) error
 	DeleteMessage(ctx context.Context, messageID int) error
+	GetLastMessage(ctx context.Context, chatID int) (*models.Message, error)
 	IsUserInChat(ctx context.Context, chatID int, userID int) (bool, error)
 	IsMessageWrittenByUser(ctx context.Context, messageID int, userID int) (bool, error)
 }
@@ -104,6 +105,22 @@ func (r *PostgresMessageRepository) DeleteMessage(ctx context.Context, messageID
 		return err
 	}
 	return nil
+}
+
+func (r *PostgresMessageRepository) GetLastMessage(ctx context.Context, chatID int) (*models.Message, error) {
+	query := `SELECT id, chat_id, user_id, content, type, created_at 
+              FROM messages 
+              WHERE chat_id = $1 
+              ORDER BY created_at DESC 
+              LIMIT 1`
+
+	var message models.Message
+	err := r.DB.QueryRow(ctx, query, chatID).Scan(&message.ID, &message.ChatID, &message.UserID, &message.Content, &message.Type, &message.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &message, nil
 }
 
 // IsUserInChat проверяет, является ли пользователь участником чата
