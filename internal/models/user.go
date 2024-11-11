@@ -6,7 +6,7 @@ type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Photo    []byte `json:"photo"`
-	UniqueId string `json:"unique_id"` // @гусь000000000000
+	UniqueId string `json:"unique_id"`
 	About    string `json:"about"`
 }
 

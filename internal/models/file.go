@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// TODO - возможно придется менять...
 type File struct {
 	ID         string    `json:"id"`
 	MessageID  string    `json:"message_id"`
