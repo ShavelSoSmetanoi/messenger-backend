@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -31,7 +32,7 @@ func (h *Handler) GetUserSettingsHandler(c *gin.Context) {
 	}
 
 	// Получаем настройки пользователя из сервиса
-	settings, err := h.services.User.GetSettingsByUserID(userID.(int))
+	settings, err := h.services.User.GetSettingsByUserID(context.Background(), userID.(int))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve settings"})
 		return
@@ -59,7 +60,7 @@ func (h *Handler) UpdateUserSettingsHandler(c *gin.Context) {
 	}
 
 	// Обновление настроек через сервис
-	err := h.services.User.UpdateSettings(userID.(int), req.Theme, req.MessageColor)
+	err := h.services.User.UpdateSettings(context.Background(), userID.(int), req.Theme, req.MessageColor)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update settings"})
 		return
