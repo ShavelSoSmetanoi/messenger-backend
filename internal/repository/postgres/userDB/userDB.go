@@ -19,6 +19,8 @@ type UserRepository interface {
 	GetUserByID(ctx context.Context, userID string) (*models.User, error)
 	UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error)
+	UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error
 }
 
 type PostgresUserRepository struct {
@@ -27,6 +29,41 @@ type PostgresUserRepository struct {
 
 func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
 	return &PostgresUserRepository{DB: db}
+}
+
+// GetSettingsByUserID возвращает настройки пользователя по его ID.
+func (r *PostgresUserRepository) GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error) {
+	var settings models.UserSettings
+
+	// Запрос для получения настроек пользователя по user_id
+	query := `SELECT id, user_id, theme, message_color, created_at FROM user_settings WHERE user_id = $1`
+	err := r.DB.QueryRow(ctx, query, userID).
+		Scan(&settings.ID, &settings.UserID, &settings.Theme, &settings.MessageColor, &settings.CreatedAt)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			log.Printf("No settings found for user ID: %d", userID)
+			return nil, errors.New("settings not found")
+		}
+		log.Printf("Error querying user settings: %v", err)
+		return nil, err
+	}
+
+	return &settings, nil
+}
+
+// UpdateSettings обновляет тему и цвет сообщений пользователя.
+func (r *PostgresUserRepository) UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error {
+	// Запрос для обновления темы и цвета сообщений пользователя
+	query := `UPDATE user_settings SET theme = COALESCE(NULLIF($1, ''), theme), message_color = COALESCE(NULLIF($2, ''), message_color) WHERE user_id = $3`
+	_, err := r.DB.Exec(ctx, query, theme, messageColor, userID)
+	if err != nil {
+		log.Printf("Error updating settings for user ID %d: %v", userID, err)
+		return err
+	}
+
+	log.Printf("Settings for user ID %d updated successfully", userID)
+	return nil
 }
 
 // CreateUser creates a new user with the provided details, hashes the password,

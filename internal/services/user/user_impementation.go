@@ -22,6 +22,16 @@ func NewUserService(repo userDB.UserRepository) *Service {
 	}
 }
 
+// GetSettingsByUserID возвращает настройки пользователя по его ID.
+func (h *Service) GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error) {
+	return h.userRepo.GetSettingsByUserID(ctx, userID)
+}
+
+// UpdateSettings обновляет тему и цвет сообщений пользователя.
+func (h *Service) UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error {
+	return h.userRepo.UpdateSettings(ctx, userID, theme, messageColor)
+}
+
 // GetUserByID - метод для получения пользователя по ID
 func (h *Service) GetUserByID(userID string) (*models.User, error) {
 	// Используем репозиторий для получения данных о пользователе

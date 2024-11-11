@@ -9,6 +9,8 @@ type ServiceInterface interface {
 	GetUserProfile(c *gin.Context)
 	UpdateUserProfile(c *gin.Context)
 	CheckUserByUsername(username string) (*models.User, error)
-	GetUserByID(userID string) (*models.User, error) // Новый метод для получения пользователя по ID
+	GetUserByID(userID string) (*models.User, error)
 	RegisterUser(c *gin.Context)
+	GetSettingsByUserID(userID int) (*models.UserSettings, error)
+	UpdateSettings(userID int, theme, messageColor string) error
 }

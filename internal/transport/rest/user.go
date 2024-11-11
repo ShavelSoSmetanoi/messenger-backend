@@ -16,6 +16,56 @@ func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
 	r.GET("/check/:username", h.CheckUserByUsernameHandler)
 
 	r.GET("/user/:user_id", h.GetUserByIDHandler)
+
+	r.GET("/settings", h.GetUserSettingsHandler)
+
+	r.PUT("/settings", h.UpdateUserSettingsHandler)
+}
+
+// GetUserSettingsHandler возвращает настройки пользователя
+func (h *Handler) GetUserSettingsHandler(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Получаем настройки пользователя из сервиса
+	settings, err := h.services.User.GetSettingsByUserID(userID.(int))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve settings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"settings": settings})
+}
+
+// UpdateUserSettingsHandler обновляет настройки пользователя
+func (h *Handler) UpdateUserSettingsHandler(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Структура для получения данных запроса
+	var req struct {
+		Theme        string `json:"theme"`
+		MessageColor string `json:"message_color"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	// Обновление настроек через сервис
+	err := h.services.User.UpdateSettings(userID.(int), req.Theme, req.MessageColor)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update settings"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Settings updated successfully"})
 }
 
 func (h *Handler) CheckUserByUsernameHandler(c *gin.Context) {
