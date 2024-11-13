@@ -10,7 +10,9 @@ import (
 
 func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 	r.POST("/chats", h.CreateChatHandler)
+
 	r.GET("/chats", h.GetChatsHandler)
+
 	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)
 }
 

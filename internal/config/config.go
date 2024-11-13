@@ -33,6 +33,6 @@ func SetupConfig() {
 
 	_, err1 := postgres.InitDB()
 	if err1 != nil {
-		panic("Pizda")
+		panic("db panic")
 	}
 }

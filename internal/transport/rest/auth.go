@@ -10,6 +10,7 @@ import (
 func (h *Handler) InitAuthRouter(r *gin.Engine) {
 	// Маршруты для аутентификации и авторизации
 	r.POST("/verify-email", middleware.EmailValidator())
+
 	r.POST("/register", middleware.VerifyCode(), h.services.User.RegisterUser)
 
 	r.POST("/login", h.HandleLogin)

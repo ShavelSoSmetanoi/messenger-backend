@@ -9,7 +9,6 @@ import (
 )
 
 func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
-
 	r.GET("/profile", h.services.User.GetUserProfile)
 
 	r.PUT("/:user_id", h.services.User.UpdateUserProfile)
