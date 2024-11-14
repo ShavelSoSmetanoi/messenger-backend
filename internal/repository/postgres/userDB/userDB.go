@@ -153,16 +153,28 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string)
 // UpdateUser updates the specified fields of a user in the database using the provided userID and update data.
 // Returns an error if the update fails.
 func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
-	// Выполнение запроса на обновление данных пользователя
-	query := `UPDATE users SET email = $1, about = $2, photo = $3 WHERE id = $4`
-	_, err := r.DB.Exec(ctx, query, userUpdate.About, userUpdate.Photo, userID)
+	// Проверяем, пустое ли фото
+	var photo interface{}
+	if len(userUpdate.Photo) == 0 {
+		photo = nil // Если пустое, устанавливаем NULL
+	} else {
+		photo = userUpdate.Photo // Если нет, используем данные из структуры
+	}
 
+	// Запрос для обновления данных пользователя
+	query := `
+		UPDATE users 
+		SET about = $1, photo = COALESCE($2::bytea, photo)
+		WHERE id = $3`
+
+	// Выполняем запрос с установленными параметрами
+	_, err := r.DB.Exec(ctx, query, userUpdate.About, photo, userID)
 	if err != nil {
 		log.Printf("Error updating user with ID %s: %v", userID, err)
 		return err
 	}
 
-	// Логирование успешного обновления
+	// Логируем успешное обновление
 	log.Printf("User with ID %s updated successfully", userID)
 	return nil
 }
