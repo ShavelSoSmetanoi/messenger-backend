@@ -20,6 +20,7 @@ type File struct {
 	Path     string
 	Content  io.ReadCloser
 	FileType string
+	Size     int64 // Размер файла
 }
 
 // FileInfo represents metadata for a file

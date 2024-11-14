@@ -81,22 +81,15 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 func (h *Handler) DownloadFileHandler(c *gin.Context) {
 	fileID := c.Param("file_id")
 
-	// Получаем файл и его метаданные
+	// Получаем файл с данными о размере и типе
 	file, err := h.services.File.DownloadFile(c, fileID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return
 	}
 
-	// Получаем метаданные файла для определения типа контента
-	fileInfo, err := h.services.File.GetFileInfo(c, fileID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Error retrieving file metadata"})
-		return
-	}
-
-	// Отправляем файл клиенту
-	c.DataFromReader(http.StatusOK, fileInfo.Size, fileInfo.FileType, file.Content, nil)
+	// Используем данные из структуры File для передачи контента
+	c.DataFromReader(http.StatusOK, file.Size, file.FileType, file.Content, nil)
 }
 
 // DeleteFileHandler handles file deletion by ID

@@ -50,25 +50,25 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 
 // DownloadFile retrieves a file from S3
 func (s *S3FileService) DownloadFile(ctx context.Context, fileID string) (*File, error) {
-	// Get file metadata
+	// Получаем метаданные и файл одновременно
 	fileInfo, err := s.client.StatObject(ctx, s.bucket, fileID, minio.StatObjectOptions{})
 	if err != nil {
 		log.Printf("Error retrieving file metadata: %v", err)
 		return nil, err
 	}
 
-	// Retrieve the file itself
+	// Извлекаем сам файл
 	resp, err := s.client.GetObject(ctx, s.bucket, fileID, minio.GetObjectOptions{})
 	if err != nil {
 		log.Printf("Error retrieving file from S3: %v", err)
 		return nil, err
 	}
-	defer resp.Close()
 
 	return &File{
 		Path:     fileID,
-		Content:  resp,                 // This is the file content
-		FileType: fileInfo.ContentType, // Get content type from metadata
+		Content:  resp,
+		FileType: fileInfo.ContentType,
+		Size:     fileInfo.Size,
 	}, nil
 }
 
