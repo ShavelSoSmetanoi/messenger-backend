@@ -6,7 +6,8 @@ import (
 	"log"
 )
 
-// GenerateCode - Функция для генерации случайного 6-значного кода
+// GenerateCode generates a random 6-digit code as a string.
+// It uses a cryptographic random number generator to ensure secure random values.
 func GenerateCode() string {
 	b := make([]byte, 3)
 	_, err := rand.Read(b)

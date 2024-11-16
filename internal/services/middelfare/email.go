@@ -4,26 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	redis "github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/redis"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/redis"
 	"github.com/ShavelSoSmetanoi/messenger-backend/pkg"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
 )
 
-// RegisterRequest структура для запроса регистрации
+// EmailValidate structure for registration request
 type EmailValidate struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-// EmailValidator отправляет код на почту и устанавливает таймаут
+// EmailValidator sends a code to the email and sets a timeout
 func EmailValidator() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req EmailValidate
 
-		// Извлекаем JSON данные из запроса
+		// Extract JSON data from the request
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Invalid request format.",
@@ -43,9 +43,8 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		code := "12345" // Генерация случайного кода
+		code := "12345"
 
-		// Логика отправки кода на email (имитация)
 		err := sendCodeToEmail(email, code)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -55,10 +54,8 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Генерация UUID для пользователя
 		uuid := pkg.GenerateUniqueID()
 
-		// Подготовка данных для сохранения в Redis
 		userData := map[string]string{
 			"username": req.Username,
 			"email":    req.Email,
@@ -66,7 +63,6 @@ func EmailValidator() gin.HandlerFunc {
 			"code":     code,
 		}
 
-		// Сериализация данных в JSON
 		userDataJSON, err := json.Marshal(userData)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -76,7 +72,7 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Сохранение данных в Redis с ключом UUID
+		// Save the user data in Redis with the generated UUID as the key
 		err = redis.Rdb.Set(ctx, uuid, userDataJSON, 5*time.Minute).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -86,7 +82,6 @@ func EmailValidator() gin.HandlerFunc {
 			return
 		}
 
-		// Возвращаем успешный ответ с UUID
 		c.JSON(http.StatusOK, gin.H{
 			"UUID": uuid,
 		})
@@ -95,15 +90,15 @@ func EmailValidator() gin.HandlerFunc {
 }
 
 type VerifyCodeRequest struct {
-	Code string `json:"code" binding:"required"` // Код верификации, введенный пользователем
-	UUID string `json:"uuid" binding:"required"` // UUID пользователя
+	Code string `json:"code" binding:"required"` // Verification code entered by the user
+	UUID string `json:"uuid" binding:"required"` // User's UUID
 }
 
+// VerifyCode checks the verification code sent by the user
 func VerifyCode() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req VerifyCodeRequest
 
-		// Извлекаем JSON данные из запроса
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "Invalid request format.",
@@ -114,7 +109,6 @@ func VerifyCode() gin.HandlerFunc {
 
 		ctx := context.Background()
 
-		// Получаем сохраненные данные пользователя из Redis по UUID
 		userDataJSON, err := redis.Rdb.Get(ctx, req.UUID).Result()
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -124,7 +118,6 @@ func VerifyCode() gin.HandlerFunc {
 			return
 		}
 
-		// Распаковка данных из JSON
 		var userData map[string]string
 		if err := json.Unmarshal([]byte(userDataJSON), &userData); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,7 +127,6 @@ func VerifyCode() gin.HandlerFunc {
 			return
 		}
 
-		// Проверка кода
 		if userData["code"] != req.Code {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid verification code.",
@@ -143,17 +135,14 @@ func VerifyCode() gin.HandlerFunc {
 			return
 		}
 
-		// Код верный, передаем данные пользователя в контекст
 		c.Set("userData", userData)
 
-		// Продолжаем выполнение запроса
 		c.Next()
 	}
 }
 
-// TODO: Заглушка функции отправки кода на email
+// sendCodeToEmail function for sending verification code to email
 func sendCodeToEmail(email, code string) error {
-	// Логика отправки email с кодом (например, с использованием внешнего сервиса)
 	fmt.Printf("Sent verification code %s to %s\n", code, email)
 	return nil
 }

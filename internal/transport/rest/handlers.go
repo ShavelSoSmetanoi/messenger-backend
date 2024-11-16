@@ -12,12 +12,15 @@ type Handler struct {
 	services *services.Services
 }
 
+// NewHandler creates and returns a new Handler with the provided services.
 func NewHandler(services *services.Services) *Handler {
 	return &Handler{
 		services: services,
 	}
 }
 
+// Init initializes the router and sets up all routes
+// It returns a Gin engine with all configured routes
 func (h *Handler) Init() *gin.Engine {
 	r := gin.Default()
 

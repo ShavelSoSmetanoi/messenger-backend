@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+// Service struct provides chat-related operations by interacting with the repositories.
 type Service struct {
 	chatRepo            chatDB.ChatRepository
 	chatParticipantRepo chatparticipantDB.ChatParticipantRepository
 }
 
+// NewChatService initializes and returns a new instance of the Service struct.
 func NewChatService(repo chatDB.ChatRepository, repos chatparticipantDB.ChatParticipantRepository) *Service {
 	return &Service{
 		chatRepo:            repo,
@@ -22,6 +24,7 @@ func NewChatService(repo chatDB.ChatRepository, repos chatparticipantDB.ChatPart
 	}
 }
 
+// GetChatUserID retrieves the participants of a chat by its ID.
 func (s *Service) GetChatUserID(chatID int) ([]models.ChatParticipant, error) {
 	participants, err := s.chatParticipantRepo.GetChatParticipants(context.Background(), chatID)
 	if err != nil {
@@ -30,9 +33,8 @@ func (s *Service) GetChatUserID(chatID int) ([]models.ChatParticipant, error) {
 	return participants, nil
 }
 
-// CreateChat создает новый чат
+// CreateChat creates a new chat and associates participants with it.
 func (s *Service) CreateChat(userID int, name string, participants []string) (*models.Chat, error) {
-	// Преобразование слайса string в слайс int
 	participantsIDs := make([]int, len(participants))
 	for i, p := range participants {
 		id, err := strconv.Atoi(p)
@@ -42,28 +44,23 @@ func (s *Service) CreateChat(userID int, name string, participants []string) (*m
 		participantsIDs[i] = id
 	}
 
-	// Создаем новый чат
 	chat := models.Chat{
 		Name:      name,
 		CreatedAt: time.Now(),
 	}
 
-	// Вызов репозитория для создания чата и добавления участников
 	chatID, err := s.chatRepo.CreateChat(context.Background(), &chat, participantsIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create chat: %v", err)
 	}
 
-	// Устанавливаем ID созданного чата
 	chat.ID = chatID
 
 	return &chat, nil
-
 }
 
-// GetChatsByUserID возвращает все чаты пользователя по его ID
+// GetChatsByUserID retrieves all chats associated with a specific user ID.
 func (s *Service) GetChatsByUserID(userID int) ([]models.Chat, error) {
-	// Получаем чаты по userID
 	chats, err := s.chatRepo.GetChatsByUserID(context.Background(), userID)
 	if err != nil {
 		return nil, err
@@ -71,7 +68,7 @@ func (s *Service) GetChatsByUserID(userID int) ([]models.Chat, error) {
 	return chats, nil
 }
 
-// DeleteChat удаляет чат по его ID
+// DeleteChat removes a chat by its ID from the repository.
 func (s *Service) DeleteChat(chatID int) error {
 	return s.chatRepo.DeleteChat(context.Background(), chatID)
 }

@@ -8,21 +8,21 @@ import (
 	"strconv"
 )
 
+// InitChatRouter initializes routes related to chat operations
 func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
-	r.POST("/chats", h.CreateChatHandler)
-
-	r.GET("/chats", h.GetChatsHandler)
-
-	r.GET("/chats/:chat_id/users", h.GetChatUsersHandler)
-
-	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)
+	r.POST("/chats", h.CreateChatHandler)                 // Route for creating a chat
+	r.GET("/chats", h.GetChatsHandler)                    // Route for fetching chats for a user
+	r.GET("/chats/:chat_id/users", h.GetChatUsersHandler) // Route for fetching users of a specific chat
+	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)      // Route for deleting a chat
 }
 
+// CreateChatRequest defines the structure for the request payload for creating a chat
 type CreateChatRequest struct {
 	Name         string   `json:"name" binding:"required"`         // Название чата
 	Participants []string `json:"participants" binding:"required"` // ID
 }
 
+// CreateChatHandler handles the creation of a new chat
 func (h *Handler) CreateChatHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -48,7 +48,6 @@ func (h *Handler) CreateChatHandler(c *gin.Context) {
 		return
 	}
 
-	// Вызов сервисного слоя для создания чата
 	chat, err := h.services.Chat.CreateChat(intUserID, request.Name, request.Participants)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create chat: " + err.Error()})
@@ -58,6 +57,7 @@ func (h *Handler) CreateChatHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"chat": chat})
 }
 
+// GetChatsHandler handles fetching all chats for a specific user
 func (h *Handler) GetChatsHandler(c *gin.Context) {
 	userID, exists := c.Get("userID")
 	if !exists {
@@ -77,7 +77,6 @@ func (h *Handler) GetChatsHandler(c *gin.Context) {
 		return
 	}
 
-	// Вызов сервисного слоя для получения чатов
 	chats, err := h.services.Chat.GetChatsByUserID(intUserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get chats"})
@@ -87,19 +86,16 @@ func (h *Handler) GetChatsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, chats)
 }
 
+// DeleteChatHandler handles deleting a chat
 func (h *Handler) DeleteChatHandler(c *gin.Context) {
-	// Получаем chat_id из параметров маршрута
 	chatIDStr := c.Param("chat_id")
 
-	// Преобразуем chatID в int
 	chatID, err := strconv.Atoi(chatIDStr)
 	if err != nil {
-		// Если ошибка преобразования, возвращаем ошибку
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat ID"})
 		return
 	}
 
-	// Вызов метода бизнес-логики для удаления чата
 	err = h.services.Chat.DeleteChat(chatID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -111,19 +107,17 @@ func (h *Handler) DeleteChatHandler(c *gin.Context) {
 		return
 	}
 
-	// Успешный ответ при удалении
 	c.JSON(http.StatusOK, gin.H{"message": "Chat successfully deleted"})
 }
 
+// GetChatUsersHandler handles fetching all users in a specific chat
 func (h *Handler) GetChatUsersHandler(c *gin.Context) {
-	// Преобразуем chat_id из строки в int
 	chatID, err := strconv.Atoi(c.Param("chat_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat_id"})
 		return
 	}
 
-	// Получаем список ID пользователей по chatID через сервис
 	userIDs, err := h.services.Chat.GetChatUserID(chatID)
 	if err != nil {
 		log.Printf("Error fetching users for chat %d: %v", chatID, err)

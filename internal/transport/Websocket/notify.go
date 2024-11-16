@@ -6,6 +6,10 @@ import (
 	"strconv"
 )
 
+// NotifyUser sends a message to a specific user over a WebSocket connection.
+// It retrieves the connection from the `Connections` map using the user's ID.
+// If the user is not connected or an error occurs while sending the message,
+// the connection is closed and removed from the map.
 func NotifyUser(userID int, message string) {
 	userIDStr := strconv.Itoa(userID) // Преобразуем userID в строку
 	conn, ok := Connections[userIDStr]
@@ -18,6 +22,6 @@ func NotifyUser(userID int, message string) {
 	if err != nil {
 		log.Printf("Error sending message to user %d: %v", userID, err)
 		conn.Close()
-		delete(Connections, userIDStr) // Удаляем соединение, используя строковый userID
+		delete(Connections, userIDStr)
 	}
 }

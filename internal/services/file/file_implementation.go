@@ -50,14 +50,12 @@ func (s *S3FileService) UploadFile(ctx context.Context, fileHeader *multipart.Fi
 
 // DownloadFile retrieves a file from S3
 func (s *S3FileService) DownloadFile(ctx context.Context, fileID string) (*File, error) {
-	// Получаем метаданные и файл одновременно
 	fileInfo, err := s.client.StatObject(ctx, s.bucket, fileID, minio.StatObjectOptions{})
 	if err != nil {
 		log.Printf("Error retrieving file metadata: %v", err)
 		return nil, err
 	}
 
-	// Извлекаем сам файл
 	resp, err := s.client.GetObject(ctx, s.bucket, fileID, minio.GetObjectOptions{})
 	if err != nil {
 		log.Printf("Error retrieving file from S3: %v", err)
@@ -82,7 +80,7 @@ func (s *S3FileService) DeleteFile(ctx context.Context, fileID string) error {
 }
 
 // GetFileInfo retrieves metadata for a file stored in S3
-func (s *S3FileService) GetFileInfo(ctx context.Context, fileID string) (*FileInfo, error) {
+func (s *S3FileService) GetFileInfo(ctx context.Context, fileID string) (*Info, error) {
 	// Get object metadata
 	head, err := s.client.StatObject(ctx, s.bucket, fileID, minio.StatObjectOptions{})
 	if err != nil {
@@ -90,7 +88,7 @@ func (s *S3FileService) GetFileInfo(ctx context.Context, fileID string) (*FileIn
 		return nil, err
 	}
 
-	return &FileInfo{
+	return &Info{
 		ID:       fileID,
 		Name:     fileID, // Or retrieve original name if stored separately
 		Size:     head.Size,

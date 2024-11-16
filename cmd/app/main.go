@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	// Запускаем сервис бека
+	// Start the backend service.
 	app.Run()
 }

@@ -19,35 +19,39 @@ import (
 
 type Services struct {
 	User    user.ServiceInterface
-	Auth    auth.AuthHandlerInterface
+	Auth    auth.Interface
 	Chat    chat.ServiceInterface
 	Message message.ServiceInterface
-	File    file.FileService
+	File    file.Service
 }
 
-// InitServices инициализирует все сервисы и возвращает контейнер зависимостей
+// InitServices initializes all services and returns a dependency container
 func InitServices() *Services {
+	// Initialize the JWT token repository and authentication handler
 	jw := jwtDB.NewUserTokenRepository(postgres.Db)
 	ml := auth.NewAuthHandler(jw)
 
-	// Создание репозитория пользователей
+	// Create the user repository and user service
 	rp := userDB.NewPostgresUserRepository(postgres.Db)
 	us := user.NewUserService(rp)
 
+	// Initialize message repository and message service
 	ms := messageDB.NewPostgresMessageRepository(postgres.Db)
 	ckl := chatparticipantDB.NewPostgresChatParticipantRepository(postgres.Db)
 	mss := message.NewMessageService(ms, ckl)
 
-	// Инициализация service chat слоя
+	// Initialize the chat repository and chat service
 	ch := chatDB.NewPostgresChatRepository(postgres.Db)
 	chs := chat.NewChatService(ch, ckl)
 
+	// Initialize the S3 client for file storage
 	s3Client, err := s3.NewS3Client(os.Getenv("BUCKET_NAME"))
 	if err != nil {
 		log.Fatalf("Failed to create S3 client: %v", err)
 	}
 	fileService := file.NewS3FileService(s3Client.Client, s3Client.Bucket, ms)
 
+	// Return the Services struct containing all initialized services
 	return &Services{
 		User:    us,
 		Auth:    ml,

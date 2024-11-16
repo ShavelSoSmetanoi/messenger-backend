@@ -13,6 +13,7 @@ import (
 	"log"
 )
 
+// UserRepository defines the interface for interacting with user data.
 type UserRepository interface {
 	CreateUser(username string, email string, password string, about string, photo []byte) error
 	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
@@ -24,19 +25,20 @@ type UserRepository interface {
 	GetAllUsers(ctx context.Context) ([]models.User, error)
 }
 
+// PostgresUserRepository is a concrete implementation of UserRepository for PostgresSQL.
 type PostgresUserRepository struct {
 	DB *pgxpool.Pool
 }
 
+// NewPostgresUserRepository creates a new instance of PostgresUserRepository.
 func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
 	return &PostgresUserRepository{DB: db}
 }
 
-// GetSettingsByUserID возвращает настройки пользователя по его ID.
+// GetSettingsByUserID retrieves user settings by ID from the user_settings table. If no settings are found, it returns an error.
 func (r *PostgresUserRepository) GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error) {
 	var settings models.UserSettings
 
-	// Запрос для получения настроек пользователя по user_id
 	query := `SELECT id, user_id, theme, message_color, created_at FROM user_settings WHERE user_id = $1`
 	err := r.DB.QueryRow(ctx, query, userID).
 		Scan(&settings.ID, &settings.UserID, &settings.Theme, &settings.MessageColor, &settings.CreatedAt)
@@ -55,7 +57,6 @@ func (r *PostgresUserRepository) GetSettingsByUserID(ctx context.Context, userID
 
 // UpdateSettings обновляет тему и цвет сообщений пользователя.
 func (r *PostgresUserRepository) UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error {
-	// Запрос для обновления темы и цвета сообщений пользователя
 	query := `UPDATE user_settings SET theme = COALESCE(NULLIF($1, ''), theme), message_color = COALESCE(NULLIF($2, ''), message_color) WHERE user_id = $3`
 	_, err := r.DB.Exec(ctx, query, theme, messageColor, userID)
 	if err != nil {
@@ -70,17 +71,14 @@ func (r *PostgresUserRepository) UpdateSettings(ctx context.Context, userID int,
 // CreateUser creates a new user with the provided details, hashes the password,
 // generates a unique ID, and inserts the user into the database.
 func (r *PostgresUserRepository) CreateUser(username, email, password, about string, photo []byte) error {
-	// Хэширование пароля
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
 		return err
 	}
 
-	// Генерация уникального ID
 	uniqueID := pkg.GenerateUniqueID()
 
-	// Выполнение запроса на вставку данных пользователя
 	query := `INSERT INTO users (username, email, password, photo, unique_id, about, created_at) 
 	          VALUES ($1, $2, $3, $4, $5, $6, NOW())`
 
@@ -90,8 +88,6 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 		return err
 	}
 
-	// Логирование успешного выполнения
-	log.Printf("User %s created successfully", username)
 	return nil
 }
 
@@ -99,32 +95,26 @@ func (r *PostgresUserRepository) CreateUser(username, email, password, about str
 func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
 	var user models.User
 
-	// Выполнение запроса на получение данных пользователя
 	query := `SELECT id, username, email, password, photo, unique_id, about 
 	          FROM users WHERE username = $1`
 	err := r.DB.QueryRow(ctx, query, username).
 		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Photo, &user.UniqueId, &user.About)
 
 	if err != nil {
-		// Если пользователь не найден
 		if err == pgx.ErrNoRows {
 			log.Printf("No user found with username: %s", username)
 			return nil, errors.New("invalid credentials")
 		}
-		// Логирование ошибки запроса
 		log.Printf("Error querying user: %v", err)
 		return nil, err
 	}
 
-	// Сравнение хешированного пароля
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		log.Printf("Password mismatch for user: %s", username)
 		return nil, errors.New("invalid credentials")
 	}
 
-	// Логирование успешной аутентификации
-	log.Printf("User %s authenticated successfully", username)
 	return &user, nil
 }
 
@@ -132,7 +122,6 @@ func (r *PostgresUserRepository) AuthenticateUser(ctx context.Context, username,
 func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
 	var user models.User
 
-	// Выполнение запроса на получение данных пользователя
 	query := `SELECT id, username, email, photo, unique_id, about 
 	          FROM users WHERE id = $1`
 	err := r.DB.QueryRow(ctx, query, userID).
@@ -154,29 +143,24 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID string)
 // UpdateUser updates the specified fields of a user in the database using the provided userID and update data.
 // Returns an error if the update fails.
 func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, userUpdate models.UserUpdate) error {
-	// Проверяем, пустое ли фото
 	var photo interface{}
 	if len(userUpdate.Photo) == 0 {
-		photo = nil // Если пустое, устанавливаем NULL
+		photo = nil
 	} else {
-		photo = userUpdate.Photo // Если нет, используем данные из структуры
+		photo = userUpdate.Photo
 	}
 
-	// Запрос для обновления данных пользователя
 	query := `
 		UPDATE users 
 		SET about = $1, photo = COALESCE($2::bytea, photo)
 		WHERE id = $3`
 
-	// Выполняем запрос с установленными параметрами
 	_, err := r.DB.Exec(ctx, query, userUpdate.About, photo, userID)
 	if err != nil {
 		log.Printf("Error updating user with ID %s: %v", userID, err)
 		return err
 	}
 
-	// Логируем успешное обновление
-	log.Printf("User with ID %s updated successfully", userID)
 	return nil
 }
 
@@ -184,7 +168,6 @@ func (r *PostgresUserRepository) UpdateUser(ctx context.Context, userID string, 
 func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
 	var user models.User
 
-	// Выполнение запроса на получение данных пользователя
 	query := `SELECT id, username, email, password, photo, unique_id, about 
 	          FROM users WHERE username = $1`
 	err := r.DB.QueryRow(ctx, query, username).
@@ -193,9 +176,8 @@ func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			log.Printf("No user found with username: %s", username)
-			return nil, nil // Пользователь не найден
+			return nil, nil
 		}
-		// Логирование ошибки запроса
 		log.Printf("Error querying user by username: %v", err)
 		return nil, err
 	}
@@ -203,6 +185,7 @@ func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username
 	return &user, nil
 }
 
+// GetAllUsers retrieves all users from the database.
 func (r *PostgresUserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	query := `SELECT id, username, email, photo, about FROM users`
 

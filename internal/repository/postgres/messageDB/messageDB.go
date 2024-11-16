@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-// MessageRepository defines methods for working with messages
+// MessageRepository defines methods for working with messages in the database
 type MessageRepository interface {
 	CreateMessage(ctx context.Context, message *models.Message) (*models.Message, error)
 	GetMessagesByChatID(ctx context.Context, chatID int) ([]models.Message, error)
@@ -28,7 +28,7 @@ func NewPostgresMessageRepository(db *pgxpool.Pool) *PostgresMessageRepository {
 	return &PostgresMessageRepository{DB: db}
 }
 
-// CreateMessage создает новое сообщение в чате
+// CreateMessage creates a new message in the chat and returns the created message
 func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *models.Message) (*models.Message, error) {
 	query := `INSERT INTO messages (chat_id, user_id, type, content, created_at, is_read, read_at) 
               VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
@@ -40,7 +40,7 @@ func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *
 		message.CreatedAt,
 		message.IsRead,
 		message.ReadAt,
-	).Scan(&message.ID) // Получение ID нового сообщения
+	).Scan(&message.ID)
 
 	if err != nil {
 		log.Printf("Error creating message: %v", err)
@@ -52,7 +52,7 @@ func (r *PostgresMessageRepository) CreateMessage(ctx context.Context, message *
 	return message, nil
 }
 
-// GetMessagesByChatID получает сообщения по ID
+// GetMessagesByChatID retrieves all messages for a specific chat ID
 func (r *PostgresMessageRepository) GetMessagesByChatID(ctx context.Context, chatID int) ([]models.Message, error) {
 	query := `SELECT id, chat_id, user_id, type, content, created_at, is_read, read_at 
               FROM messages WHERE chat_id = $1`
@@ -70,11 +70,11 @@ func (r *PostgresMessageRepository) GetMessagesByChatID(ctx context.Context, cha
 			&message.ID,
 			&message.ChatID,
 			&message.UserID,
-			&message.Type, // считываем поле type
+			&message.Type,
 			&message.Content,
 			&message.CreatedAt,
-			&message.IsRead, // считываем поле is_read
-			&message.ReadAt, // считываем поле read_at
+			&message.IsRead,
+			&message.ReadAt,
 		); err != nil {
 			log.Printf("Error scanning message: %v", err)
 			return nil, err
@@ -85,7 +85,7 @@ func (r *PostgresMessageRepository) GetMessagesByChatID(ctx context.Context, cha
 	return messages, nil
 }
 
-// UpdateMessageContent обновляет содержимое сообщения
+// UpdateMessageContent updates the content of an existing message
 func (r *PostgresMessageRepository) UpdateMessageContent(ctx context.Context, messageID int, content string) error {
 	query := `UPDATE messages SET content = $1 WHERE id = $2`
 	_, err := r.DB.Exec(ctx, query, content, messageID)
@@ -96,7 +96,7 @@ func (r *PostgresMessageRepository) UpdateMessageContent(ctx context.Context, me
 	return nil
 }
 
-// DeleteMessage удаляет сообщение из базы данных
+// DeleteMessage deletes a message from the database by its ID
 func (r *PostgresMessageRepository) DeleteMessage(ctx context.Context, messageID int) error {
 	query := `DELETE FROM messages WHERE id = $1`
 	_, err := r.DB.Exec(ctx, query, messageID)
@@ -107,6 +107,7 @@ func (r *PostgresMessageRepository) DeleteMessage(ctx context.Context, messageID
 	return nil
 }
 
+// GetLastMessage retrieves the last message for a specific chat ID
 func (r *PostgresMessageRepository) GetLastMessage(ctx context.Context, chatID int) (*models.Message, error) {
 	query := `SELECT id, chat_id, user_id, content, type, created_at 
               FROM messages 
@@ -123,7 +124,7 @@ func (r *PostgresMessageRepository) GetLastMessage(ctx context.Context, chatID i
 	return &message, nil
 }
 
-// IsUserInChat проверяет, является ли пользователь участником чата
+// IsUserInChat checks if a specific user is a participant of the chat
 func (r *PostgresMessageRepository) IsUserInChat(ctx context.Context, chatID int, userID int) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS (
@@ -139,6 +140,7 @@ func (r *PostgresMessageRepository) IsUserInChat(ctx context.Context, chatID int
 	return exists, nil
 }
 
+// IsMessageWrittenByUser checks if a specific message was written by the specified user
 func (r *PostgresMessageRepository) IsMessageWrittenByUser(ctx context.Context, messageID int, userID int) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS (

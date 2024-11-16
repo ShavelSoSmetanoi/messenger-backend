@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// AuthMiddleware is a middleware for verifying the validity of JWT tokens.
 func AuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -27,7 +28,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		tokenString := parts[1]
 		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return []byte(secret), nil
 		})

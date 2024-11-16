@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// InitMessageRouter initialize routes related to message actions
 func (h *Handler) InitMessageRouter(r *gin.RouterGroup) {
 	r.POST("/chats/:chat_id/messages", h.SendMessageHandler)
 
@@ -131,20 +132,17 @@ func (h *Handler) GetMessagesHandler(c *gin.Context) {
 
 // UpdateMessageHandler обновляет содержимое сообщения
 func (h *Handler) UpdateMessageHandler(c *gin.Context) {
-	// Получаем userID из контекста и проверяем тип
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Преобразуем userID к int, если он сохранен как строка
 	var userIDInt int
 	switch id := userID.(type) {
 	case int:
 		userIDInt = id
 	case string:
-		// Попытка преобразовать userID из строки в int
 		var err error
 		userIDInt, err = strconv.Atoi(id)
 		if err != nil {
@@ -156,11 +154,9 @@ func (h *Handler) UpdateMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Извлекаем параметры из URL
 	messageIDStr := c.Param("message_id")
 	chatIDStr := c.Param("chat_id")
 
-	// Конвертация параметров в int
 	messageID, err := strconv.Atoi(messageIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
@@ -172,7 +168,6 @@ func (h *Handler) UpdateMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Извлекаем новое содержимое из JSON
 	var req struct {
 		Content string `json:"content" binding:"required"`
 	}
@@ -181,17 +176,14 @@ func (h *Handler) UpdateMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Вызов сервиса для обновления сообщения
 	participants, err := h.services.Message.UpdateMessage(chatID, userIDInt, messageID, req.Content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Отправляем сообщение через WebSocket участникам, кроме отправителя
 	for _, participant := range participants {
-		if participant.UserID != userIDInt { // Не уведомлять отправителя
-			// Сериализуем в JSON
+		if participant.UserID != userIDInt {
 			response := UpdateMessageResponse{
 				Status:    "update",
 				ChatID:    chatID,
@@ -204,7 +196,6 @@ func (h *Handler) UpdateMessageHandler(c *gin.Context) {
 				continue
 			}
 
-			// Отправляем JSON уведомление пользователю
 			Websocket.NotifyUser(participant.UserID, string(jsonData))
 		}
 	}
@@ -214,20 +205,17 @@ func (h *Handler) UpdateMessageHandler(c *gin.Context) {
 
 // DeleteMessageHandler удаляет сообщение
 func (h *Handler) DeleteMessageHandler(c *gin.Context) {
-	// Получаем userID из контекста и проверяем тип
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Преобразуем userID к int, если он сохранен как строка
 	var userIDInt int
 	switch id := userID.(type) {
 	case int:
 		userIDInt = id
 	case string:
-		// Попытка преобразовать userID из строки в int
 		var err error
 		userIDInt, err = strconv.Atoi(id)
 		if err != nil {
@@ -239,11 +227,9 @@ func (h *Handler) DeleteMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Извлекаем параметры из URL
 	messageIDStr := c.Param("message_id")
 	chatIDStr := c.Param("chat_id")
 
-	// Конвертация параметров в int
 	messageID, err := strconv.Atoi(messageIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
@@ -255,17 +241,14 @@ func (h *Handler) DeleteMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Вызов сервиса для удаления сообщения
 	participants, err := h.services.Message.DeleteMessage(chatID, userIDInt, messageID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Отправляем сообщение через WebSocket участникам, кроме отправителя
 	for _, participant := range participants {
-		if participant.UserID != userIDInt { // Не уведомлять отправителя
-			// Сериализуем в JSON
+		if participant.UserID != userIDInt {
 			response := DeleteMessageResponse{
 				Status:    "delete",
 				ChatID:    chatID,
@@ -277,7 +260,6 @@ func (h *Handler) DeleteMessageHandler(c *gin.Context) {
 				continue
 			}
 
-			// Отправляем JSON уведомление пользователю
 			Websocket.NotifyUser(participant.UserID, string(jsonData))
 		}
 	}
@@ -286,7 +268,6 @@ func (h *Handler) DeleteMessageHandler(c *gin.Context) {
 }
 
 func (h *Handler) GetLastMessageHandler(c *gin.Context) {
-	// Извлекаем chatID из параметров URL
 	chatIDStr := c.Param("chat_id")
 	chatID, err := strconv.Atoi(chatIDStr)
 	if err != nil {
@@ -294,7 +275,6 @@ func (h *Handler) GetLastMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Получаем последнее сообщение из репозитория
 	message, err := h.services.Message.GetLastMessage(chatID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -305,7 +285,6 @@ func (h *Handler) GetLastMessageHandler(c *gin.Context) {
 		return
 	}
 
-	// Возвращаем сообщение в ответе
 	c.JSON(http.StatusOK, gin.H{
 		"message_id": message.ID,
 		"chat_id":    message.ChatID,

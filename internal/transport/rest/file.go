@@ -10,12 +10,13 @@ import (
 )
 
 func (h *Handler) InitFileRoutes(r *gin.RouterGroup) {
+	// Define a new route group under "/files"
 	files := r.Group("/files")
 	{
-		files.POST("/upload/:chat_id/", h.UploadFileHandler)   // Загрузка файла
-		files.GET("/download/:file_id", h.DownloadFileHandler) // Скачивание файла по ID
-		files.DELETE("/:file_id", h.DeleteFileHandler)         // Удаление файла по ID
-		files.GET("/:file_id/info", h.GetFileInfoHandler)      // Получение информации о файле по ID
+		files.POST("/upload/:chat_id/", h.UploadFileHandler)
+		files.GET("/download/:file_id", h.DownloadFileHandler)
+		files.DELETE("/:file_id", h.DeleteFileHandler)
+		files.GET("/:file_id/info", h.GetFileInfoHandler)
 	}
 }
 
@@ -47,18 +48,14 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 		return
 	}
 
-	// Используем сервис для отправки сообщения и получения участников
 	message, participants, err := h.services.Message.SendMessage(chatIDInt, userID.(string), fileID, "file")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send message"})
 		return
 	}
 
-	// Отправляем сообщение через WebSocket участникам, кроме отправителя
 	for _, participant := range participants {
-		if participant.UserID != userID { // Не уведомлять отправителя
-			// Сериализуем в JSON
-
+		if participant.UserID != userID {
 			sendMessage := SendMessageResponse{
 				Status:  "send",
 				Message: *message,
@@ -69,7 +66,6 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 				continue
 			}
 
-			// Отправляем JSON уведомление пользователю
 			Websocket.NotifyUser(participant.UserID, string(jsonData))
 		}
 	}
@@ -81,14 +77,12 @@ func (h *Handler) UploadFileHandler(c *gin.Context) {
 func (h *Handler) DownloadFileHandler(c *gin.Context) {
 	fileID := c.Param("file_id")
 
-	// Получаем файл с данными о размере и типе
 	file, err := h.services.File.DownloadFile(c, fileID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return
 	}
 
-	// Используем данные из структуры File для передачи контента
 	c.DataFromReader(http.StatusOK, file.Size, file.FileType, file.Content, nil)
 }
 

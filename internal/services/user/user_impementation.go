@@ -12,29 +12,30 @@ import (
 	"net/http"
 )
 
+// Service struct contains the user repository, which is used for user data access.
 type Service struct {
 	userRepo userDB.UserRepository
 }
 
+// NewUserService creates and returns a new Service instance with the provided user repository.
 func NewUserService(repo userDB.UserRepository) *Service {
 	return &Service{
 		userRepo: repo,
 	}
 }
 
-// GetSettingsByUserID возвращает настройки пользователя по его ID.
+// GetSettingsByUserID retrieves the settings for a user based on their user ID.
 func (h *Service) GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error) {
 	return h.userRepo.GetSettingsByUserID(ctx, userID)
 }
 
-// UpdateSettings обновляет тему и цвет сообщений пользователя.
+// UpdateSettings updates the user's theme and message color preferences.
 func (h *Service) UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error {
 	return h.userRepo.UpdateSettings(ctx, userID, theme, messageColor)
 }
 
-// GetUserByID - метод для получения пользователя по ID
+// GetUserByID retrieves a user by their user ID.
 func (h *Service) GetUserByID(userID string) (*models.User, error) {
-	// Используем репозиторий для получения данных о пользователе
 	user, err := h.userRepo.GetUserByID(context.Background(), userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -47,9 +48,8 @@ func (h *Service) GetUserByID(userID string) (*models.User, error) {
 	return user, nil
 }
 
-// RegisterUser регистрирует нового пользователя
+// RegisterUser handles the user registration process.
 func (h *Service) RegisterUser(c *gin.Context) {
-	// Получаем данные из контекста
 	userData, exists := c.Get("userData")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -58,10 +58,8 @@ func (h *Service) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Приводим данные к типу map[string]string
 	data := userData.(map[string]string)
 
-	// Теперь у тебя есть данные, например:
 	username := data["username"]
 	email := data["email"]
 	password := data["password"]
@@ -75,16 +73,14 @@ func (h *Service) RegisterUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-// GetUserProfile возвращает профиль пользователя по его ID
+// GetUserProfile retrieves the profile of a user based on their user ID.
 func (h *Service) GetUserProfile(c *gin.Context) {
-	// Получаем userID из контекста (например, после авторизации)
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
 		return
 	}
 
-	// Используем репозиторий для получения данных о пользователе
 	user, err := h.userRepo.GetUserByID(context.Background(), userID.(string))
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -96,7 +92,6 @@ func (h *Service) GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	// Возвращаем данные пользователя в формате JSON
 	c.JSON(http.StatusOK, gin.H{
 		"id":       user.ID,
 		"uuid":     user.UniqueId,
@@ -107,7 +102,7 @@ func (h *Service) GetUserProfile(c *gin.Context) {
 	})
 }
 
-// UpdateUserProfile обновляет профиль пользователя
+// UpdateUserProfile updates the profile information of a user based on input from the request body.
 func (h *Service) UpdateUserProfile(c *gin.Context) {
 	userID := c.Param("user_id")
 	var userUpdate models.UserUpdate
@@ -127,17 +122,18 @@ func (h *Service) UpdateUserProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
 }
 
-// CheckUserByUsername проверяет наличие пользователя по имени
+// CheckUserByUsername checks if a user exists with the given username.
 func (h *Service) CheckUserByUsername(username string) (*models.User, error) {
 	user, err := h.userRepo.GetUserByUsername(context.Background(), username)
 
 	if err != nil {
-		return nil, err // Возвращаем ошибку в случае проблем с получением пользователя
+		return nil, err
 	}
 
 	return user, nil
 }
 
+// GetAllUsers retrieves a list of all users from the database.
 func (h *Service) GetAllUsers(ctx context.Context) ([]models.User, error) {
 	users, err := h.userRepo.GetAllUsers(ctx)
 	if err != nil {

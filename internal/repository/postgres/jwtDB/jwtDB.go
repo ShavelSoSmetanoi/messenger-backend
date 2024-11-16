@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// UserTokenRepositoryInterface defines the methods for working with user tokens
 type UserTokenRepositoryInterface interface {
 	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
 	SaveToken(ctx context.Context, userID, token string) error
@@ -20,14 +21,18 @@ type UserTokenRepositoryInterface interface {
 	GetTokensByUserID(ctx context.Context, userID string) ([]models.UserToken, error)
 }
 
+// UserTokenRepository struct implements UserTokenRepositoryInterface
 type UserTokenRepository struct {
 	DB *pgxpool.Pool
 }
 
+// NewUserTokenRepository creates and returns a new UserTokenRepository instance
 func NewUserTokenRepository(db *pgxpool.Pool) *UserTokenRepository {
 	return &UserTokenRepository{DB: db}
 }
 
+// AuthenticateUser checks if the provided username and password are valid
+// If valid, it returns the user's information; otherwise, an error is returned
 func (r *UserTokenRepository) AuthenticateUser(ctx context.Context, username, password string) (*models.User, error) {
 	var user models.User
 
@@ -40,7 +45,7 @@ func (r *UserTokenRepository) AuthenticateUser(ctx context.Context, username, pa
 		return nil, err
 	}
 
-	// Проверка пароля
+	// Compare the provided password with the stored hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
@@ -48,20 +53,20 @@ func (r *UserTokenRepository) AuthenticateUser(ctx context.Context, username, pa
 	return &user, nil
 }
 
-// SaveToken сохраняет токен пользователя в базе данных
+// SaveToken saves a user token in the database
 func (r *UserTokenRepository) SaveToken(ctx context.Context, userID, token string) error {
 	_, err := r.DB.Exec(ctx, "INSERT INTO user_tokens (user_id, token, created_at) VALUES ($1, $2, $3)",
 		userID, token, time.Now())
 	return err
 }
 
-// DeleteToken удаляет токен из базы данных
+// DeleteToken deletes a user token from the database based on the token value
 func (r *UserTokenRepository) DeleteToken(ctx context.Context, token string) error {
 	_, err := r.DB.Exec(ctx, "DELETE FROM user_tokens WHERE token = $1", token)
 	return err
 }
 
-// IsTokenValid проверяет, действителен ли токен, и истек ли срок его действия
+// IsTokenValid checks if the provided token is valid and if it has expired
 func (r *UserTokenRepository) IsTokenValid(ctx context.Context, token string) (bool, error) {
 	var createdAt time.Time
 	err := r.DB.QueryRow(ctx, "SELECT created_at FROM user_tokens WHERE token = $1", token).Scan(&createdAt)
@@ -79,7 +84,7 @@ func (r *UserTokenRepository) IsTokenValid(ctx context.Context, token string) (b
 	return true, nil
 }
 
-// GetTokensByUserID возвращает все токены пользователя
+// GetTokensByUserID retrieves all tokens associated with a specific user
 func (r *UserTokenRepository) GetTokensByUserID(ctx context.Context, userID string) ([]models.UserToken, error) {
 	rows, err := r.DB.Query(ctx, "SELECT id, user_id, token, created_at FROM user_tokens WHERE user_id = $1", userID)
 	if err != nil {

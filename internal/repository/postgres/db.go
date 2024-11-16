@@ -12,6 +12,7 @@ import (
 
 var Db *pgxpool.Pool
 
+// InitDB initializes a connection to the PostgresSQL database and returns the connection pool.
 func InitDB() (*pgxpool.Pool, error) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
@@ -26,8 +27,9 @@ func InitDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	config.MaxConns = 25                     // Максимальное количество открытых соединений
-	config.MaxConnIdleTime = time.Minute * 1 // Максимальное время "ожидания" соединения
+	// Set connection pool parameters
+	config.MaxConns = 25                     // Maximum number of open connections
+	config.MaxConnIdleTime = time.Minute * 1 // Maximum idle time for a connection
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
@@ -35,7 +37,6 @@ func InitDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	// Тестовое подключение
 	if err := pool.Ping(context.Background()); err != nil {
 		log.Fatalf("Failed to ping database: %v", err)
 		return nil, err
