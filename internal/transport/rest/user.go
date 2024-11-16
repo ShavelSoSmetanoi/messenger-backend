@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"database/sql"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -18,9 +19,35 @@ func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
 
 	r.GET("/user/:user_id", h.GetUserByIDHandler)
 
+	r.GET("/users", h.GetAllUsersHandler)
+
 	r.GET("/settings", h.GetUserSettingsHandler)
 
 	r.PUT("/settings", h.UpdateUserSettingsHandler)
+}
+
+func (h *Handler) GetAllUsersHandler(c *gin.Context) {
+	users, err := h.services.User.GetAllUsers(c.Request.Context())
+	if err != nil {
+		log.Printf("Error retrieving users: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+		return
+	}
+
+	var userResponses []models.UserResponse
+	for _, user := range users {
+		userResponses = append(userResponses, models.UserResponse{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			Photo:    user.Photo,
+			About:    user.About,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"users": userResponses,
+	})
 }
 
 // GetUserSettingsHandler возвращает настройки пользователя
@@ -128,14 +155,6 @@ func (h *Handler) CheckUserByUsernameHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-type UserResponse struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Photo    []byte `json:"photo"`
-	About    string `json:"about"`
-}
-
 func (h *Handler) GetUserByIDHandler(c *gin.Context) {
 	// Получаем user_id из параметров маршрута
 	userID := c.Param("user_id")
@@ -152,7 +171,7 @@ func (h *Handler) GetUserByIDHandler(c *gin.Context) {
 		return
 	}
 
-	userResponse := UserResponse{
+	userResponse := models.UserResponse{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,

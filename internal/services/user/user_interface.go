@@ -14,4 +14,5 @@ type ServiceInterface interface {
 	RegisterUser(c *gin.Context)
 	GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error)
 	UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error
+	GetAllUsers(ctx context.Context) ([]models.User, error)
 }

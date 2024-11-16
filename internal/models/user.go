@@ -14,3 +14,11 @@ type UserUpdate struct {
 	About string `json:"about"`
 	Photo []byte `json:"photo"`
 }
+
+type UserResponse struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Photo    []byte `json:"photo"`
+	About    string `json:"about"`
+}

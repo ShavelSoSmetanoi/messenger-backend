@@ -21,6 +21,7 @@ type UserRepository interface {
 	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
 	GetSettingsByUserID(ctx context.Context, userID int) (*models.UserSettings, error)
 	UpdateSettings(ctx context.Context, userID int, theme, messageColor string) error
+	GetAllUsers(ctx context.Context) ([]models.User, error)
 }
 
 type PostgresUserRepository struct {
@@ -200,4 +201,27 @@ func (r *PostgresUserRepository) GetUserByUsername(ctx context.Context, username
 	}
 
 	return &user, nil
+}
+
+func (r *PostgresUserRepository) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	query := `SELECT id, username, email, photo, about FROM users`
+
+	rows, err := r.DB.Query(ctx, query)
+	if err != nil {
+		log.Printf("Error executing query: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Photo, &user.About); err != nil {
+			log.Printf("Error scanning row: %v", err)
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }

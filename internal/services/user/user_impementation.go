@@ -137,3 +137,12 @@ func (h *Service) CheckUserByUsername(username string) (*models.User, error) {
 
 	return user, nil
 }
+
+func (h *Service) GetAllUsers(ctx context.Context) ([]models.User, error) {
+	users, err := h.userRepo.GetAllUsers(ctx)
+	if err != nil {
+		log.Printf("Error retrieving users: %v", err)
+		return nil, err
+	}
+	return users, nil
+}
