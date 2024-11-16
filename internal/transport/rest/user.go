@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
@@ -24,27 +25,66 @@ func (h *Handler) InitUserRouter(r *gin.RouterGroup) {
 
 // GetUserSettingsHandler возвращает настройки пользователя
 func (h *Handler) GetUserSettingsHandler(c *gin.Context) {
+	// Получаем userID из контекста
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
+	// Преобразуем userID в int, если это строка
+	var userIDInt int
+	switch v := userID.(type) {
+	case int:
+		userIDInt = v // Если userID уже int, просто присваиваем
+	case string:
+		// Если это строка, пытаемся преобразовать в int
+		parsedID, err := strconv.Atoi(v)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
+		userIDInt = parsedID
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
+		return
+	}
+
 	// Получаем настройки пользователя из сервиса
-	settings, err := h.services.User.GetSettingsByUserID(context.Background(), userID.(int))
+	settings, err := h.services.User.GetSettingsByUserID(context.Background(), userIDInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve settings"})
 		return
 	}
 
+	// Возвращаем настройки пользователя
 	c.JSON(http.StatusOK, gin.H{"settings": settings})
 }
 
 // UpdateUserSettingsHandler обновляет настройки пользователя
 func (h *Handler) UpdateUserSettingsHandler(c *gin.Context) {
+	// Получаем userID из контекста
 	userID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Преобразуем userID в int, если это строка
+	var userIDInt int
+	switch v := userID.(type) {
+	case int:
+		userIDInt = v // Если userID уже int, просто присваиваем
+	case string:
+		// Если это строка, пытаемся преобразовать в int
+		parsedID, err := strconv.Atoi(v)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
+		userIDInt = parsedID
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID type"})
 		return
 	}
 
@@ -53,18 +93,21 @@ func (h *Handler) UpdateUserSettingsHandler(c *gin.Context) {
 		Theme        string `json:"theme"`
 		MessageColor string `json:"message_color"`
 	}
+
+	// Привязка данных из тела запроса к структуре
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
 
 	// Обновление настроек через сервис
-	err := h.services.User.UpdateSettings(context.Background(), userID.(int), req.Theme, req.MessageColor)
+	err := h.services.User.UpdateSettings(context.Background(), userIDInt, req.Theme, req.MessageColor)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update settings"})
 		return
 	}
 
+	// Возвращаем успешный ответ
 	c.JSON(http.StatusOK, gin.H{"message": "Settings updated successfully"})
 }
 
