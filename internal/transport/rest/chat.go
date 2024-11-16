@@ -13,6 +13,8 @@ func (h *Handler) InitChatRouter(r *gin.RouterGroup) {
 
 	r.GET("/chats", h.GetChatsHandler)
 
+	r.GET("/chats/:chat_id/users", h.GetChatUsersHandler)
+
 	r.DELETE("/chats/:chat_id", h.DeleteChatHandler)
 }
 
@@ -111,4 +113,23 @@ func (h *Handler) DeleteChatHandler(c *gin.Context) {
 
 	// Успешный ответ при удалении
 	c.JSON(http.StatusOK, gin.H{"message": "Chat successfully deleted"})
+}
+
+func (h *Handler) GetChatUsersHandler(c *gin.Context) {
+	// Преобразуем chat_id из строки в int
+	chatID, err := strconv.Atoi(c.Param("chat_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat_id"})
+		return
+	}
+
+	// Получаем список ID пользователей по chatID через сервис
+	userIDs, err := h.services.Chat.GetChatUserID(chatID)
+	if err != nil {
+		log.Printf("Error fetching users for chat %d: %v", chatID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user_ids": userIDs})
 }

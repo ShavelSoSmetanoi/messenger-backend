@@ -5,18 +5,29 @@ import (
 	"fmt"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/models"
 	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatDB"
+	"github.com/ShavelSoSmetanoi/messenger-backend/internal/repository/postgres/chatparticipantDB"
 	"strconv"
 	"time"
 )
 
 type Service struct {
-	chatRepo chatDB.ChatRepository
+	chatRepo            chatDB.ChatRepository
+	chatParticipantRepo chatparticipantDB.ChatParticipantRepository
 }
 
-func NewChatService(repo chatDB.ChatRepository) *Service {
+func NewChatService(repo chatDB.ChatRepository, repos chatparticipantDB.ChatParticipantRepository) *Service {
 	return &Service{
-		chatRepo: repo,
+		chatRepo:            repo,
+		chatParticipantRepo: repos,
 	}
+}
+
+func (s *Service) GetChatUserID(chatID int) ([]models.ChatParticipant, error) {
+	participants, err := s.chatParticipantRepo.GetChatParticipants(context.Background(), chatID)
+	if err != nil {
+		return nil, err
+	}
+	return participants, nil
 }
 
 // CreateChat создает новый чат

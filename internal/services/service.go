@@ -34,13 +34,13 @@ func InitServices() *Services {
 	rp := userDB.NewPostgresUserRepository(postgres.Db)
 	us := user.NewUserService(rp)
 
-	// Инициализация service chat слоя
-	ch := chatDB.NewPostgresChatRepository(postgres.Db)
-	chs := chat.NewChatService(ch)
-
 	ms := messageDB.NewPostgresMessageRepository(postgres.Db)
 	ckl := chatparticipantDB.NewPostgresChatParticipantRepository(postgres.Db)
 	mss := message.NewMessageService(ms, ckl)
+
+	// Инициализация service chat слоя
+	ch := chatDB.NewPostgresChatRepository(postgres.Db)
+	chs := chat.NewChatService(ch, ckl)
 
 	s3Client, err := s3.NewS3Client(os.Getenv("BUCKET_NAME"))
 	if err != nil {
