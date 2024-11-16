@@ -31,7 +31,6 @@ func NewS3Client(bucketName string) (*Client, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize MinIO client: %v", err)
-		return nil, err
 	}
 
 	// Создаем клиент для работы с S3
