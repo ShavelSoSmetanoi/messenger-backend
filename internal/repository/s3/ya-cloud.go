@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -29,7 +30,7 @@ func NewS3Client(bucketName string) (*Client, error) {
 		},
 	)
 	if err != nil {
-		log.Fatalf("Unable to initialize MinIO client: %v", err)
+		return nil, fmt.Errorf("unable to initialize MinIO client: %v", err)
 		return nil, err
 	}
 
