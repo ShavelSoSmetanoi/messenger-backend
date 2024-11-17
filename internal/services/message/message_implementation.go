@@ -112,7 +112,7 @@ func (h *Service) DeleteMessage(chatID int, userID int, messageID int) ([]models
 
 	err = h.messageRepo.DeleteMessage(context.Background(), messageID)
 	if err != nil {
-		return nil, fmt.Errorf("не удалось удалить сообщение: %v", err)
+		return nil, fmt.Errorf("failed to delete message: %v", err)
 	}
 
 	participants, err := h.chatParticipantRepo.GetChatParticipants(context.Background(), chatID)
@@ -142,6 +142,5 @@ func (h *Service) GetMessages(chatID int, userID int) ([]models.Message, error) 
 
 // GetLastMessage returns the last message of a chat
 func (h *Service) GetLastMessage(chatID int) (*models.Message, error) {
-	// Вызов репозитория для получения последнего сообщения
 	return h.messageRepo.GetLastMessage(context.Background(), chatID)
 }
