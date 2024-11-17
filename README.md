@@ -23,8 +23,15 @@ DB_PASSWORD=mypassword
 DB_NAME=mydatabase
 DB_HOST=my_postgres_container 
 DB_PORT=5432
+YANDEX_S3_REGION=ru-central1               # Регион, где находится хранилище
+YANDEX_S3_ENDPOINT=storage.yandexcloud.net # URL для доступа к хранилищу
+YANDEX_S3_ACCESS_KEY=your_access_key       # Ваш ключ доступа
+YANDEX_S3_SECRET_KEY=your_secret_key       # Ваш секретный ключ
+BUCKET_NAME=my-app-bucket                  # Имя вашего бакета
 ```
 Замените your_jwt_secret_here на ваш секретный ключ для JWT, а также параметры подключения к базе данных (если они отличаются от значений по умолчанию).
+
+Наш проект использует Yandex Object Storage (S3) для хранения объектов, таких как изображения, файлы и другие данные. Для взаимодействия с хранилищем необходимо настроить параметры в файле .env.
 
 Шаг 2: В папке deployments создайте файл .env:
 
